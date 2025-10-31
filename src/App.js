@@ -1,23 +1,52 @@
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import './firebase';
 
 function App() {
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes in seconds
+  const [isActive, setIsActive] = useState(false);
+
+  // Format time as mm:ss
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // Timer logic
+  useEffect(() => {
+    let interval = null;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0) {
+      clearInterval(interval);
+      alert('⏰ Sacred Seat complete!');
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft]);
+
+  const handleStartPause = () => {
+    setIsActive(!isActive);
+  };
+
+  const handleReset = () => {
+    setIsActive(false);
+    setTimeLeft(30 * 60);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload. This will be transformed into Lifemaxxing letsgooo~
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1>Lifemaxxing ⏳</h1>
+        <h2>{formatTime(timeLeft)}</h2>
+        <div>
+          <button onClick={handleStartPause}>
+            {isActive ? 'Pause' : 'Start'}
+          </button>
+          <button onClick={handleReset}>Reset</button>
+        </div>
       </header>
     </div>
   );
