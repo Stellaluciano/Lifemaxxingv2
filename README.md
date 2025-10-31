@@ -1,1 +1,1 @@
-This is a productivity tool based on the foundational theory of CTDP and RSIP.
+I want to build a productivity tool to maximize the density of my life based on the foundational theories of Chained Time-Delay Protocol (CTDP), and Recursive Stabilization Iteration Protocol (RSIP) developed by "Harry Kane". 
