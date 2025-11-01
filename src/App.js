@@ -23,12 +23,19 @@ function App() {
     } else if (timeLeft === 0) {
       clearInterval(interval);
       alert('⏰ Sacred Seat complete!');
+      setIsActive(false);
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft]);
 
-  const handleStartPause = () => {
-    setIsActive(!isActive);
+  const handleStart = () => {
+    if (timeLeft > 0) {
+      setIsActive(true);
+    }
+  };
+
+  const handlePause = () => {
+    setIsActive(false);
   };
 
   const handleReset = () => {
@@ -42,8 +49,11 @@ function App() {
         <h1>Lifemaxxing ⏳</h1>
         <h2>{formatTime(timeLeft)}</h2>
         <div>
-          <button onClick={handleStartPause}>
-            {isActive ? 'Pause' : 'Start'}
+          <button onClick={handleStart} disabled={isActive || timeLeft === 0}>
+            Start
+          </button>
+          <button onClick={handlePause} disabled={!isActive}>
+            Pause
           </button>
           <button onClick={handleReset}>Reset</button>
         </div>
