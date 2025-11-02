@@ -1,0 +1,20 @@
+<svg width="120" height="160" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flag-pole" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D5D9E6"/>
+      <stop offset="1" stop-color="#9AA0B5"/>
+    </linearGradient>
+    <linearGradient id="flag-fill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF5F6D"/>
+      <stop offset="1" stop-color="#FF9966"/>
+    </linearGradient>
+    <linearGradient id="flag-shadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CC3745" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#A01F2D" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="18" width="12" height="124" rx="6" fill="url(#flag-pole)"/>
+  <path d="M28 24L96 36C104 37.5 104 49.5 96 51L28 64V24Z" fill="url(#flag-fill)"/>
+  <path d="M28 64L92 50C98 48.5 98 40.5 92 39L28 28V64Z" fill="url(#flag-shadow)" opacity="0.4"/>
+  <circle cx="22" cy="24" r="6" fill="#F2F5FF"/>
+</svg>

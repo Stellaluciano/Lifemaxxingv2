@@ -1,25 +1,33 @@
-import logo from './logo.svg';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import StudyRoom from './components/StudyRoom';
+import TimerPage from './components/TimerPage';
+import RsipComingSoon from './pages/RsipComingSoon';
 import './App.css';
 import './firebase';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload. This will be transformed into Lifemaxxing letsgooo~
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<StudyRoom />} />
+          <Route path="/timer" element={<TimerPage />} />
+          <Route
+            path="/auxiliary-timer"
+            element={
+              <TimerPage
+                durationSeconds={15 * 60}
+                title="Auxiliary Chain"
+                successPrefix="Auxiliary Session"
+              />
+            }
+          />
+          <Route path="/rsip" element={<RsipComingSoon />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 

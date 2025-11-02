@@ -1,0 +1,54 @@
+<svg width="220" height="240" viewBox="0 0 220 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="throne-glow" cx="0.5" cy="0.25" r="0.72">
+      <stop offset="0" stop-color="#FFEAAE" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFEAAE" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold-main" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F9D773"/>
+      <stop offset="0.6" stop-color="#E6B04C"/>
+      <stop offset="1" stop-color="#CF8224"/>
+    </linearGradient>
+    <linearGradient id="velvet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F36E53"/>
+      <stop offset="1" stop-color="#C63A3A"/>
+    </linearGradient>
+    <linearGradient id="gold-side" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2C55F"/>
+      <stop offset="1" stop-color="#B9781E"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feOffset dy="8" />
+      <feGaussianBlur stdDeviation="12" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.2 0"/>
+      <feBlend in="SourceGraphic" mode="normal"/>
+    </filter>
+  </defs>
+
+  <rect width="220" height="240" rx="48" fill="#FFFFFF"/>
+  <ellipse cx="110" cy="110" rx="105" ry="90" fill="url(#throne-glow)"/>
+
+  <g filter="url(#soft-shadow)">
+    <path d="M36 96C36 86 44 78 54 78H68V198H38V96Z" fill="url(#gold-main)"/>
+    <path d="M184 96C184 86 176 78 166 78H152V198H182V96Z" fill="url(#gold-main)"/>
+  </g>
+
+  <path d="M70 70L60 40L82 44L94 16L110 48L126 16L138 44L160 40L150 70H70Z" fill="url(#gold-main)"/>
+
+  <path d="M80 44L110 8L140 44V166H80V44Z" fill="url(#velvet)"/>
+  <path d="M110 20L132 46V156H88V46L110 20Z" fill="url(#gold-side)" opacity="0.15"/>
+  <path d="M98 56L110 36L122 56V148H98V56Z" fill="#F4AA55" opacity="0.25"/>
+
+  <circle cx="56" cy="108" r="16" fill="url(#gold-main)"/>
+  <circle cx="164" cy="108" r="16" fill="url(#gold-main)"/>
+
+  <path d="M28 136C28 118 42 104 60 104H72V166H44C34 166 28 154 28 144V136Z" fill="url(#gold-side)"/>
+  <path d="M192 136C192 118 178 104 160 104H148V166H176C186 166 192 154 192 144V136Z" fill="url(#gold-side)"/>
+
+  <rect x="58" y="158" width="104" height="56" rx="14" fill="url(#velvet)"/>
+  <rect x="52" y="190" width="116" height="38" rx="16" fill="url(#gold-main)"/>
+  <rect x="62" y="206" width="96" height="24" rx="12" fill="url(#gold-side)"/>
+
+  <path d="M56 210H80V234C80 238.418 76.4183 242 72 242H64C59.5817 242 56 238.418 56 234V210Z" fill="url(#gold-main)"/>
+  <path d="M164 210H140V234C140 238.418 143.582 242 148 242H156C160.418 242 164 238.418 164 234V210Z" fill="url(#gold-main)"/>
+</svg>

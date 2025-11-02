@@ -1,0 +1,33 @@
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wood-seat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C6884C"/>
+      <stop offset="1" stop-color="#8B5524"/>
+    </linearGradient>
+    <linearGradient id="wood-leg" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#B87736"/>
+      <stop offset="1" stop-color="#6A3E1A"/>
+    </linearGradient>
+    <linearGradient id="wood-back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CE9155"/>
+      <stop offset="1" stop-color="#965524"/>
+    </linearGradient>
+    <filter id="shadow" x="18" y="180" width="164" height="52" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" />
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <ellipse cx="100" cy="200" rx="72" ry="16" fill="#000" opacity="0.12"/>
+  </g>
+
+  <rect x="60" y="60" width="80" height="58" rx="26" fill="url(#wood-back)"/>
+
+  <path d="M58 118C58 104.745 68.7452 94 82 94H118C131.255 94 142 104.745 142 118V128C142 141.255 131.255 152 118 152H82C68.7452 152 58 141.255 58 128V118Z" fill="url(#wood-seat)"/>
+
+  <path d="M70 151L58 202C56.8104 207.177 60.7717 212 66.092 212H74.908C80.2283 212 84.1896 207.177 83 202L74 165" fill="url(#wood-leg)"/>
+  <path d="M130 151L142 202C143.19 207.177 139.228 212 133.908 212H125.092C119.772 212 115.81 207.177 117 202L126 165" fill="url(#wood-leg)"/>
+
+  <path d="M72 118L64 78C63.1562 73.6415 66.5254 69.5 71 69.5H75.5C79.4934 69.5 82.7825 72.7282 82.9867 76.7189L85 116" fill="url(#wood-leg)"/>
+  <path d="M128 118L136 78C136.844 73.6415 133.475 69.5 129 69.5H124.5C120.507 69.5 117.218 72.7282 117.013 76.7189L115 116" fill="url(#wood-leg)"/>
+</svg>
