@@ -1,9 +1,26 @@
 import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const Layout = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const isRsip = location.pathname.startsWith('/rsip');
+
+  const handleMainChainNavigate = () => {
+    if (location.pathname !== '/timer') {
+      navigate('/timer');
+    }
+  };
+
+  const handleAuxiliaryNavigate = () => {
+    if (location.pathname !== '/auxiliary-timer') {
+      navigate('/auxiliary-timer');
+    }
+  };
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell${isRsip ? ' app-shell--rsip' : ''}`}>
       <header className="top-nav">
         <div className="top-nav__inner">
           <NavLink to="/" className="top-nav__brand">
@@ -12,34 +29,58 @@ const Layout = () => {
           <nav className="top-nav__tabs">
             <NavLink
               to="/"
+              end={false}
               className={({ isActive }) =>
-                `top-nav__tab${isActive ? ' top-nav__tab--active' : ''}`
+                `top-nav__tab${isActive && !isRsip ? ' top-nav__tab--active' : ''}`
               }
             >
               CTDP
             </NavLink>
-            <button type="button" className="top-nav__tab top-nav__tab--disabled">
+            <NavLink
+              to="/rsip"
+              className={({ isActive }) =>
+                `top-nav__tab${isActive ? ' top-nav__tab--active' : ''}`
+              }
+            >
               RSIP
-            </button>
+            </NavLink>
           </nav>
         </div>
       </header>
-      <div className="content-area">
-        <aside className="sidebar">
-          <button type="button" className="sidebar__button">
-            Main Chain
-          </button>
-          <button type="button" className="sidebar__button">
-            Auxiliary Chain
-          </button>
-          <button type="button" className="sidebar__button">
-            3 Core Principles
-          </button>
-        </aside>
-        <main className="whiteboard">
+      {isRsip ? (
+        <main className="whiteboard whiteboard--rsip">
           <Outlet />
         </main>
-      </div>
+      ) : (
+        <div className="content-area">
+          <aside className="sidebar">
+            <button
+              type="button"
+              className={`sidebar__button${
+                location.pathname === '/timer' ? ' sidebar__button--active' : ''
+              }`}
+              onClick={handleMainChainNavigate}
+            >
+              Main Chain
+            </button>
+            <button
+              type="button"
+              className={`sidebar__button${
+                location.pathname === '/auxiliary-timer' ? ' sidebar__button--active' : ''
+              }`}
+              onClick={handleAuxiliaryNavigate}
+            >
+              Auxiliary Chain
+            </button>
+            <button type="button" className="sidebar__button">
+              3 Core Principles
+            </button>
+          </aside>
+          <main className="whiteboard">
+            <Outlet />
+          </main>
+        </div>
+      )}
     </div>
   );
 };

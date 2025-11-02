@@ -10,7 +10,7 @@ const Seat = ({ isSacred, onClick }) => {
       type="button"
       className={`seat${isSacred ? ' seat--sacred' : ''}`}
       onClick={isSacred ? onClick : undefined}
-      disabled={!isSacred}
+      aria-disabled={!isSacred}
       aria-label={label}
     >
       <img

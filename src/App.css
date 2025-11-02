@@ -91,18 +91,78 @@ body,
   box-shadow: 0 10px 25px -15px rgba(30, 33, 59, 0.4);
 }
 
-.top-nav__tab--disabled {
-  cursor: not-allowed;
-  background: rgba(20, 24, 38, 0.04);
-  color: rgba(31, 35, 51, 0.55);
-  box-shadow: none;
-  pointer-events: none;
-}
-
 .content-area {
   flex: 1;
   display: flex;
   align-items: stretch;
+}
+
+.app-shell--rsip {
+  background: radial-gradient(circle at top, rgba(77, 90, 255, 0.25), transparent 55%),
+    #0c0f1a;
+  color: #f0f4ff;
+}
+
+.app-shell--rsip .top-nav {
+  background: rgba(12, 15, 26, 0.92);
+  border-bottom-color: rgba(147, 158, 255, 0.12);
+}
+
+.app-shell--rsip .top-nav__tabs {
+  background: rgba(70, 82, 255, 0.25);
+}
+
+.app-shell--rsip .top-nav__tab {
+  color: rgba(237, 240, 255, 0.92);
+}
+
+.app-shell--rsip .top-nav__tab--active {
+  background: rgba(108, 122, 255, 0.35);
+  box-shadow: none;
+}
+
+.whiteboard--rsip {
+  flex: 1;
+  padding: clamp(3rem, 8vw, 6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #f0f4ff;
+}
+
+.rsip-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 640px;
+  width: 100%;
+}
+
+.rsip-placeholder__title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 1.25rem;
+}
+
+.rsip-placeholder__title-sub {
+  display: block;
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  letter-spacing: 0.08em;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.rsip-placeholder__subtitle {
+  max-width: 520px;
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.6;
+  opacity: 0.8;
 }
 
 .sidebar {
@@ -133,6 +193,12 @@ body,
 .sidebar__button:hover {
   border-color: rgba(57, 90, 255, 0.45);
   transform: translateY(-1px);
+}
+
+.sidebar__button--active {
+  border-color: rgba(57, 90, 255, 0.6);
+  background: linear-gradient(135deg, rgba(238, 243, 255, 0.95), rgba(216, 229, 255, 0.95));
+  box-shadow: 0 18px 36px -24px rgba(57, 90, 255, 0.45);
 }
 
 .whiteboard {
@@ -181,7 +247,7 @@ body,
   cursor: default;
 }
 
-.seat:disabled {
+.seat[aria-disabled='true'] {
   opacity: 0.9;
 }
 
@@ -255,33 +321,50 @@ body,
   border-radius: 24px;
   background: linear-gradient(145deg, #eef1fb, #f7f9ff);
   border: 1px solid rgba(26, 35, 126, 0.08);
-  overflow: hidden;
+  overflow: visible;
+  display: flex;
+  align-items: center;
 }
 
 .timer-progress__line {
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, rgba(69, 112, 255, 0.85), rgba(118, 188, 255, 0.9));
-  transform: translateY(-50%);
+  left: 6%;
+  right: 14%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(79, 122, 255, 0.85), rgba(154, 115, 255, 0.85));
+  top: 60%;
   border-radius: 999px;
 }
 
 .timer-progress__figure {
   position: absolute;
-  bottom: 18px;
+  bottom: 36px;
   transform: translateX(-50%);
-  font-size: 1.9rem;
   transition: left 0.6s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: kinetic-bob 2.4s ease-in-out infinite;
+}
+
+.timer-progress__figure svg {
+  width: clamp(46px, 6vw, 62px);
+  height: auto;
+}
+
+.timer-progress__flag svg {
+  width: clamp(40px, 5.5vw, 58px);
+  height: auto;
 }
 
 .timer-progress__flag {
   position: absolute;
-  right: 22px;
-  bottom: 16px;
-  font-size: 1.8rem;
+  right: 4%;
+  bottom: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: flag-wave 3s ease-in-out infinite;
 }
 
 .controls {
@@ -320,6 +403,26 @@ body,
   background: linear-gradient(135deg, #a9b2ff, #c5d8ff);
   color: #1f2333;
   box-shadow: 0 18px 35px -24px rgba(98, 110, 255, 0.55);
+}
+
+@keyframes kinetic-bob {
+  0%,
+  100% {
+    transform: translate(-50%, 0);
+  }
+  50% {
+    transform: translate(-50%, -6px);
+  }
+}
+
+@keyframes flag-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 .timer-page__success {

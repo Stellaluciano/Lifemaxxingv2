@@ -1,0 +1,23 @@
+<svg width="120" height="160" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="walker-body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4D7CFE"/>
+      <stop offset="1" stop-color="#7BC1FF"/>
+    </linearGradient>
+    <linearGradient id="walker-leg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2F50D4"/>
+      <stop offset="1" stop-color="#5C86FF"/>
+    </linearGradient>
+    <linearGradient id="walker-head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7B04A"/>
+      <stop offset="1" stop-color="#E58C2A"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="22" r="18" fill="url(#walker-head)"/>
+  <rect x="46" y="40" width="28" height="44" rx="12" fill="url(#walker-body)"/>
+  <path d="M40 84C40 78.477 44.477 74 50 74H70C75.523 74 80 78.477 80 84V92C80 104.15 70.1503 114 58 114H52C45.3726 114 40 108.627 40 102V84Z" fill="url(#walker-body)"/>
+  <path d="M54 112L42 146C40.822 149.161 42.9716 152.5 46.3411 152.5H52.6589C56.0284 152.5 58.178 149.161 57 146L54 138" fill="url(#walker-leg)"/>
+  <path d="M68 112L80 146C81.178 149.161 79.0284 152.5 75.6589 152.5H69.3411C65.9716 152.5 63.822 149.161 65 146L70 132" fill="url(#walker-leg)"/>
+  <path d="M48 82L40 60C38.8438 56.5666 41.5491 53 45.179 53H49.821C52.8897 53 55.3433 55.5975 55.4989 58.6628L56 68" fill="url(#walker-leg)"/>
+  <path d="M72 82L80 60C81.1562 56.5666 78.4509 53 74.821 53H70.179C67.1103 53 64.6567 55.5975 64.5011 58.6628L64 68" fill="url(#walker-leg)"/>
+</svg>

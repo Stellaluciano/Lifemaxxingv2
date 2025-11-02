@@ -25,6 +25,7 @@
     </filter>
   </defs>
 
+  <rect width="220" height="240" rx="48" fill="#FFFFFF"/>
   <ellipse cx="110" cy="110" rx="105" ry="90" fill="url(#throne-glow)"/>
 
   <g filter="url(#soft-shadow)">
