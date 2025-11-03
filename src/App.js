@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import StudyRoom from './components/StudyRoom';
 import TimerPage from './components/TimerPage';
 import RsipComingSoon from './pages/RsipComingSoon';
+import CorePrinciples from './pages/CorePrinciples';
 import './App.css';
 import './firebase';
 
@@ -24,7 +25,18 @@ function App() {
               />
             }
           />
+          <Route
+            path="/test-timer"
+            element={
+              <TimerPage
+                durationSeconds={5}
+                title="Test Chain"
+                successPrefix="Test Session"
+              />
+            }
+          />
           <Route path="/rsip" element={<RsipComingSoon />} />
+          <Route path="/core-principles" element={<CorePrinciples />} />
         </Route>
       </Routes>
     </BrowserRouter>
