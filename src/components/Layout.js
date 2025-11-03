@@ -19,6 +19,12 @@ const Layout = () => {
     }
   };
 
+  const handleTestChainNavigate = () => {
+    if (location.pathname !== '/test-timer') {
+      navigate('/test-timer');
+    }
+  };
+
   return (
     <div className={`app-shell${isRsip ? ' app-shell--rsip' : ''}`}>
       <header className="top-nav">
@@ -72,9 +78,26 @@ const Layout = () => {
             >
               Auxiliary Chain
             </button>
-            <button type="button" className="sidebar__button">
-              3 Core Principles
+            <button
+              type="button"
+              className={`sidebar__button${
+                location.pathname === '/test-timer' ? ' sidebar__button--active' : ''
+              }`}
+              onClick={handleTestChainNavigate}
+            >
+              Test Chain
             </button>
+            <div className="sidebar__spacer" />
+            <NavLink
+              to="/core-principles"
+              className={({ isActive }) =>
+                `sidebar__button sidebar__button--link${
+                  isActive ? ' sidebar__button--active' : ''
+                }`
+              }
+            >
+              3 Core Principles
+            </NavLink>
           </aside>
           <main className="whiteboard">
             <Outlet />
