@@ -16,21 +16,41 @@ const TimerPage = ({
   durationSeconds = 30 * 60,
   title = 'Main Chain',
   successPrefix = 'Session',
+  storageKey,
 }) => {
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [isActive, setIsActive] = useState(false);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [modalSession, setModalSession] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [sessionStart, setSessionStart] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     setTimeLeft(durationSeconds);
     setIsActive(false);
-    setSessionsCompleted(0);
     setShowModal(false);
     setModalSession(null);
+    setSessionStart(null);
   }, [durationSeconds]);
+
+  useEffect(() => {
+    if (!storageKey || typeof window === 'undefined') {
+      setSessions([]);
+      return;
+    }
+    try {
+      const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      if (Array.isArray(stored)) {
+        setSessions(stored);
+      } else {
+        setSessions([]);
+      }
+    } catch (error) {
+      console.warn('Failed to parse stored sessions', error);
+      setSessions([]);
+    }
+  }, [storageKey]);
 
   useEffect(() => {
     if (!isActive) {
@@ -39,12 +59,37 @@ const TimerPage = ({
 
     if (timeLeft === 0) {
       setIsActive(false);
-      setSessionsCompleted((prev) => {
-        const next = prev + 1;
-        setModalSession(next);
-        setShowModal(true);
-        return next;
+      const endDate = new Date();
+      const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - durationSeconds * 1000);
+      const formattedDate = startDate.toLocaleDateString('en-CA');
+      const formattedStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const formattedEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      setSessions((prev) => {
+        const updatedSessions = [
+          ...prev,
+          {
+            number: prev.length + 1,
+            date: formattedDate,
+            startTime: formattedStart,
+            endTime: formattedEnd,
+          },
+        ];
+
+        if (storageKey && typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
+          } catch (error) {
+            console.warn('Failed to persist sessions', error);
+          }
+        }
+
+        setModalSession(updatedSessions.length);
+        return updatedSessions;
       });
+
+      setShowModal(true);
+      setSessionStart(null);
       return undefined;
     }
 
@@ -53,7 +98,7 @@ const TimerPage = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
+  }, [isActive, timeLeft, sessionStart, durationSeconds, storageKey]);
 
   const progressPercent = useMemo(() => {
     const elapsed = durationSeconds - timeLeft;
@@ -63,6 +108,9 @@ const TimerPage = ({
 
   const handleStart = () => {
     if (timeLeft > 0) {
+      if (!isActive) {
+        setSessionStart(new Date());
+      }
       setIsActive(true);
     }
   };
@@ -71,10 +119,12 @@ const TimerPage = ({
     setIsActive(false);
     setTimeLeft(durationSeconds);
     setShowModal(false);
+    setSessionStart(null);
   };
 
   const handleModalRestart = () => {
     setTimeLeft(durationSeconds);
+    setSessionStart(new Date());
     setIsActive(true);
     setShowModal(false);
   };
@@ -115,9 +165,25 @@ const TimerPage = ({
         </button>
       </div>
 
-      {sessionsCompleted > 0 && (
-        <div className="timer-page__success">
-          {successPrefix} #{sessionsCompleted} complete!
+      {storageKey && sessions.length > 0 && (
+        <div className="session-history">
+          <h3 className="session-history__title">✅ Completed Sessions</h3>
+          <div className="session-history__table">
+            <div className="session-history__row session-history__row--head">
+              <span>#</span>
+              <span>Date</span>
+              <span>Start</span>
+              <span>End</span>
+            </div>
+            {sessions.map((session) => (
+              <div className="session-history__row" key={`${session.number}-${session.date}-${session.startTime}`}>
+                <span>{session.number}</span>
+                <span>{session.date}</span>
+                <span>{session.startTime}</span>
+                <span>{session.endTime}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

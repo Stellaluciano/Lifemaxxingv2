@@ -1,0 +1,27 @@
+<svg width="200" height="220" viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="silver-seat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F1F4FD"/>
+      <stop offset="1" stop-color="#C3CBDC"/>
+    </linearGradient>
+    <linearGradient id="silver-leg" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#AEB7CC"/>
+      <stop offset="1" stop-color="#7D8798"/>
+    </linearGradient>
+    <radialGradient id="silver-highlight" cx="0.2" cy="0.2" r="0.9">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#D2D8E6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="60" y="62" width="80" height="58" rx="26" fill="url(#silver-seat)"/>
+  <rect x="60" y="62" width="80" height="58" rx="26" fill="url(#silver-highlight)"/>
+
+  <path d="M58 120C58 106.745 68.7452 96 82 96H118C131.255 96 142 106.745 142 120V130C142 143.255 131.255 154 118 154H82C68.7452 154 58 143.255 58 130V120Z" fill="url(#silver-seat)"/>
+
+  <path d="M70 152L58 200C56.8104 205.177 60.7717 210 66.092 210H74.908C80.2283 210 84.1896 205.177 83 200L74 166" fill="url(#silver-leg)"/>
+  <path d="M130 152L142 200C143.19 205.177 139.228 210 133.908 210H125.092C119.772 210 115.81 205.177 117 200L126 166" fill="url(#silver-leg)"/>
+
+  <path d="M72 118L64 82C63.1562 77.6415 66.5254 74 71 74H75.5C79.4934 74 82.7825 77.1347 82.9867 81.1184L85 116" fill="url(#silver-leg)"/>
+  <path d="M128 118L136 82C136.844 77.6415 133.475 74 129 74H124.5C120.507 74 117.218 77.1347 117.013 81.1184L115 116" fill="url(#silver-leg)"/>
+</svg>

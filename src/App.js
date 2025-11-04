@@ -32,6 +32,7 @@ function App() {
                 durationSeconds={5}
                 title="Test Chain"
                 successPrefix="Test Session"
+                storageKey="test-chain-sessions"
               />
             }
           />
