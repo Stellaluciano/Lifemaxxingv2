@@ -7,12 +7,14 @@ const Seat = ({ variant = 'regular', onClick }) => {
   const labelMap = {
     sacred: 'Sacred Seat',
     silver: 'Silver Seat',
+    test: 'Test Seat',
     regular: 'Seat',
   };
 
   const iconMap = {
     sacred: sacredSeat,
     silver: silverSeat,
+    test: regularSeat,
     regular: regularSeat,
   };
 
@@ -27,6 +29,7 @@ const Seat = ({ variant = 'regular', onClick }) => {
       aria-label={labelMap[variant]}
     >
       <img src={iconMap[variant]} alt="" className="seat__icon" draggable="false" />
+      {variant === 'test' && <span className="seat__badge">TEST</span>}
     </button>
   );
 };

@@ -7,6 +7,7 @@ import RsipComingSoon from './pages/RsipComingSoon';
 import CorePrinciples from './pages/CorePrinciples';
 import './App.css';
 import './firebase';
+import { SACRED_INTENT_STORAGE_KEY, TEST_INTENT_STORAGE_KEY } from './constants';
 
 function App() {
   return (
@@ -14,7 +15,7 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<StudyRoom />} />
-          <Route path="/timer" element={<TimerPage />} />
+          <Route path="/timer" element={<TimerPage intentStorageKey={SACRED_INTENT_STORAGE_KEY} />} />
           <Route
             path="/auxiliary-timer"
             element={
@@ -33,6 +34,7 @@ function App() {
                 title="Test Chain"
                 successPrefix="Test Session"
                 storageKey="test-chain-sessions"
+                intentStorageKey={TEST_INTENT_STORAGE_KEY}
               />
             }
           />

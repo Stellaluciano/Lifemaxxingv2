@@ -17,6 +17,7 @@ const TimerPage = ({
   title = 'Main Chain',
   successPrefix = 'Session',
   storageKey,
+  intentStorageKey,
 }) => {
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [isActive, setIsActive] = useState(false);
@@ -24,6 +25,7 @@ const TimerPage = ({
   const [modalSession, setModalSession] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [sessionStart, setSessionStart] = useState(null);
+  const [intentDetails, setIntentDetails] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +53,29 @@ const TimerPage = ({
       setSessions([]);
     }
   }, [storageKey]);
+
+  useEffect(() => {
+    if (!intentStorageKey || typeof window === 'undefined') {
+      setIntentDetails(null);
+      return;
+    }
+    try {
+      const storedIntent = localStorage.getItem(intentStorageKey);
+      if (!storedIntent) {
+        setIntentDetails(null);
+        return;
+      }
+      const parsedIntent = JSON.parse(storedIntent);
+      if (parsedIntent && typeof parsedIntent === 'object') {
+        setIntentDetails(parsedIntent);
+      } else {
+        setIntentDetails(null);
+      }
+    } catch (error) {
+      console.warn('Failed to parse sacred seat intent', error);
+      setIntentDetails(null);
+    }
+  }, [intentStorageKey]);
 
   useEffect(() => {
     if (!isActive) {
@@ -134,9 +159,35 @@ const TimerPage = ({
     navigate('/');
   };
 
+  const formattedIntentTime = useMemo(() => {
+    if (!intentDetails?.startTime) {
+      return null;
+    }
+    try {
+      return new Date(intentDetails.startTime).toLocaleString([], {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      });
+    } catch (error) {
+      return null;
+    }
+  }, [intentDetails]);
+
   return (
     <div className="timer-page">
       <h1 className="timer-page__title">{title}</h1>
+      {intentDetails && (
+        <div className="timer-intent">
+          <div className="timer-intent__heading">Session Intent</div>
+          <div className="timer-intent__category">{intentDetails.categoryLabel}</div>
+          {intentDetails.description && (
+            <p className="timer-intent__description">{intentDetails.description}</p>
+          )}
+          {formattedIntentTime && (
+            <p className="timer-intent__timestamp">Planned at {formattedIntentTime}</p>
+          )}
+        </div>
+      )}
       <div className="timer-display">{formatTime(timeLeft)}</div>
 
       <div className="timer-progress">
