@@ -7,6 +7,12 @@ import RsipComingSoon from './pages/RsipComingSoon';
 import CorePrinciples from './pages/CorePrinciples';
 import './App.css';
 import './firebase';
+import {
+  SACRED_INTENT_STORAGE_KEY,
+  MAIN_CHAIN_DURATION_KEY,
+  AUX_CHAIN_DURATION_KEY,
+  MAIN_CHAIN_SESSION_KEY,
+} from './constants';
 
 function App() {
   return (
@@ -14,7 +20,16 @@ function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<StudyRoom />} />
-          <Route path="/timer" element={<TimerPage />} />
+          <Route
+            path="/timer"
+            element={
+              <TimerPage
+                intentStorageKey={SACRED_INTENT_STORAGE_KEY}
+                storageKey={MAIN_CHAIN_SESSION_KEY}
+                durationPreferenceKey={MAIN_CHAIN_DURATION_KEY}
+              />
+            }
+          />
           <Route
             path="/auxiliary-timer"
             element={
@@ -22,16 +37,7 @@ function App() {
                 durationSeconds={15 * 60}
                 title="Auxiliary Chain"
                 successPrefix="Auxiliary Session"
-              />
-            }
-          />
-          <Route
-            path="/test-timer"
-            element={
-              <TimerPage
-                durationSeconds={5}
-                title="Test Chain"
-                successPrefix="Test Session"
+                durationPreferenceKey={AUX_CHAIN_DURATION_KEY}
               />
             }
           />

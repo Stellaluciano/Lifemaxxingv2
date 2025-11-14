@@ -19,12 +19,6 @@ const Layout = () => {
     }
   };
 
-  const handleTestChainNavigate = () => {
-    if (location.pathname !== '/test-timer') {
-      navigate('/test-timer');
-    }
-  };
-
   return (
     <div className={`app-shell${isRsip ? ' app-shell--rsip' : ''}`}>
       <header className="top-nav">
@@ -77,15 +71,6 @@ const Layout = () => {
               onClick={handleAuxiliaryNavigate}
             >
               Auxiliary Chain
-            </button>
-            <button
-              type="button"
-              className={`sidebar__button${
-                location.pathname === '/test-timer' ? ' sidebar__button--active' : ''
-              }`}
-              onClick={handleTestChainNavigate}
-            >
-              Test Chain
             </button>
             <div className="sidebar__spacer" />
             <NavLink
