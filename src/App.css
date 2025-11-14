@@ -278,23 +278,6 @@ body,
   filter: drop-shadow(0 20px 30px rgba(20, 24, 38, 0.24));
 }
 
-.seat__badge {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: #1f2333;
-  background: rgba(255, 255, 255, 0.88);
-  padding: 0.1rem 0.4rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 20px -10px rgba(15, 18, 34, 0.4);
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-}
-
 .seat--sacred {
   cursor: pointer;
 }
@@ -325,15 +308,6 @@ body,
 
 .seat--silver:not(:disabled):hover .seat__icon {
   filter: drop-shadow(0 24px 34px rgba(136, 149, 178, 0.6));
-}
-
-.seat--test {
-  cursor: pointer;
-  position: relative;
-}
-
-.seat--test .seat__icon {
-  filter: drop-shadow(0 14px 24px rgba(20, 24, 38, 0.45));
 }
 
 .sacred-modal__overlay {
@@ -404,6 +378,14 @@ body,
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 0.5rem;
+}
+
+.sacred-modal__warning {
+  margin: 0;
+  flex: 1 1 100%;
+  font-size: 0.9rem;
+  color: #b3261e;
+  font-weight: 600;
 }
 
 .sacred-modal__primary,
@@ -499,6 +481,99 @@ body,
   color: rgba(31, 35, 51, 0.6);
 }
 
+.timer-log {
+  width: min(640px, 100%);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(31, 35, 51, 0.08);
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 22px 45px -32px rgba(20, 24, 38, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.timer-log__title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(31, 35, 51, 0.65);
+}
+
+.timer-log__empty {
+  margin: 0;
+  color: rgba(31, 35, 51, 0.7);
+  font-weight: 500;
+}
+
+.timer-log__entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.timer-log__entry {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(247, 249, 255, 0.85);
+  border: 1px solid rgba(31, 35, 51, 0.08);
+}
+
+.timer-log__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 70px;
+  font-weight: 700;
+  color: #1f2333;
+}
+
+.timer-log__number {
+  font-size: 1rem;
+}
+
+.timer-log__date {
+  font-size: 0.85rem;
+  color: rgba(31, 35, 51, 0.7);
+}
+
+.timer-log__details {
+  flex: 1;
+}
+
+.timer-log__activity {
+  font-weight: 600;
+  color: #1f2333;
+}
+
+.timer-log__description {
+  margin: 0.15rem 0 0;
+  color: rgba(31, 35, 51, 0.75);
+  font-size: 0.9rem;
+}
+
+.timer-log__time {
+  font-weight: 600;
+  color: rgba(31, 35, 51, 0.8);
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.timer-display-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .timer-display {
   font-size: clamp(4rem, 14vw, 8rem);
   font-weight: 700;
@@ -506,6 +581,111 @@ body,
   color: #f6ad3b;
   text-shadow: 0 35px 60px rgba(246, 173, 59, 0.35);
   margin-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+
+.timer-display__action {
+  border: 1px solid rgba(31, 35, 51, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 0.35rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2333;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 12px 24px -18px rgba(20, 24, 38, 0.6);
+}
+
+.timer-display__action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px -20px rgba(20, 24, 38, 0.45);
+}
+
+.timer-settings {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(20, 24, 38, 0.08);
+  box-shadow: 0 20px 40px -32px rgba(20, 24, 38, 0.35);
+}
+
+.timer-settings__inputs {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.timer-settings__label {
+  flex: 1 1 140px;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: rgba(31, 35, 51, 0.85);
+  font-size: 0.95rem;
+}
+
+.timer-settings__input {
+  border: 1px solid rgba(20, 24, 38, 0.12);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  font-family: inherit;
+  background: rgba(247, 249, 255, 0.85);
+}
+
+.timer-settings__apply {
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: linear-gradient(120deg, rgba(68, 86, 255, 0.9), rgba(114, 186, 255, 0.9));
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 14px 35px -22px rgba(68, 86, 255, 0.85);
+}
+
+.timer-settings__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.timer-settings__cancel {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.2rem;
+  font-weight: 600;
+  background: rgba(31, 35, 51, 0.08);
+  color: #1f2333;
+  cursor: pointer;
+}
+
+.timer-settings__apply:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px -25px rgba(68, 86, 255, 0.9);
+}
+
+.timer-settings__hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(31, 35, 51, 0.65);
+}
+
+.timer-settings__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #c73636;
+  font-weight: 600;
 }
 
 .timer-progress {
@@ -604,6 +784,17 @@ body,
   box-shadow: 0 18px 35px -24px rgba(98, 110, 255, 0.55);
 }
 
+.controls button.controls__fail {
+  background: #ff3b30;
+  color: #fff;
+  box-shadow: 0 18px 38px -24px rgba(255, 59, 48, 0.75);
+}
+
+.controls button.controls__fail:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 45px -25px rgba(255, 59, 48, 0.85);
+}
+
 @keyframes kinetic-bob {
   0%,
   100% {
@@ -645,6 +836,27 @@ body,
   border: 1px solid rgba(57, 90, 255, 0.15);
   text-align: center;
   animation: modal-scale-in 0.22s ease-out;
+}
+
+.timer-modal--warning .timer-modal__title {
+  color: #b3261e;
+}
+
+.timer-modal__danger {
+  background: linear-gradient(135deg, #ff5f6d, #ffc371);
+  color: #1f2333;
+  border: none;
+  border-radius: 16px;
+  padding: 0.85rem 1.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 25px 45px -30px rgba(255, 95, 109, 0.75);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.timer-modal__danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 30px 50px -28px rgba(255, 95, 109, 0.85);
 }
 
 .timer-modal__title {
