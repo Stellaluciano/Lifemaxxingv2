@@ -2,6 +2,8 @@ export const SACRED_INTENT_STORAGE_KEY = 'sacred-seat-intent';
 export const MAIN_CHAIN_DURATION_KEY = 'main-chain-duration';
 export const AUX_CHAIN_DURATION_KEY = 'aux-chain-duration';
 export const MAIN_CHAIN_SESSION_KEY = 'main-chain-sessions';
+export const AUX_CHAIN_SESSION_KEY = 'aux-chain-sessions';
+export const AUTO_START_MAIN_KEY = 'main-auto-start';
 export const TASK_CATEGORY_OPTIONS = [
   { value: 'study', label: 'Study' },
   { value: 'workout', label: 'Workout' },

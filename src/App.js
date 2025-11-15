@@ -12,6 +12,7 @@ import {
   MAIN_CHAIN_DURATION_KEY,
   AUX_CHAIN_DURATION_KEY,
   MAIN_CHAIN_SESSION_KEY,
+  AUX_CHAIN_SESSION_KEY,
 } from './constants';
 
 function App() {
@@ -37,7 +38,10 @@ function App() {
                 durationSeconds={15 * 60}
                 title="Auxiliary Chain"
                 successPrefix="Auxiliary Session"
+                intentStorageKey={SACRED_INTENT_STORAGE_KEY}
                 durationPreferenceKey={AUX_CHAIN_DURATION_KEY}
+                storageKey={AUX_CHAIN_SESSION_KEY}
+                isAuxiliary
               />
             }
           />

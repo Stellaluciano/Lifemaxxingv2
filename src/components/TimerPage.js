@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ReactComponent as WalkerIcon } from '../assets/walker.svg';
+import { ReactComponent as WalkerIcon } from '../assets/person.svg';
 import { ReactComponent as FlagIcon } from '../assets/flag.svg';
-import { DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
+import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
 
 const formatTime = (seconds) => {
   const h = Math.floor(seconds / 3600);
@@ -20,6 +20,29 @@ const breakdownDuration = (totalSeconds) => {
   return { hours, minutes, seconds };
 };
 
+const describeDuration = (seconds) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  const parts = [];
+  if (hours > 0) {
+    parts.push(`${hours} hour${hours === 1 ? '' : 's'}`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+  }
+  if (secs > 0) {
+    parts.push(`${secs} second${secs === 1 ? '' : 's'}`);
+  }
+  if (parts.length === 0) {
+    return 'a moment';
+  }
+  if (parts.length === 1) {
+    return parts[0];
+  }
+  return parts.join(' and ');
+};
+
 const TimerPage = ({
   durationSeconds = 30 * 60,
   title = 'Main Chain',
@@ -27,6 +50,7 @@ const TimerPage = ({
   storageKey,
   intentStorageKey,
   durationPreferenceKey,
+  isAuxiliary = false,
 }) => {
   const initialBreakdown = breakdownDuration(durationSeconds);
   const [baseDuration, setBaseDuration] = useState(durationSeconds);
@@ -46,7 +70,10 @@ const TimerPage = ({
   const [customCategory, setCustomCategory] = useState('');
   const [descriptionInput, setDescriptionInput] = useState('');
   const [showFocusFailPrompt, setShowFocusFailPrompt] = useState(false);
+  const [graceSeconds, setGraceSeconds] = useState(null);
+  const [showCancelPrompt, setShowCancelPrompt] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+  const auxiliaryWindowLabel = useMemo(() => describeDuration(baseDuration), [baseDuration]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -111,6 +138,44 @@ const TimerPage = ({
     }
   }, [intentStorageKey]);
 
+  const finalizeSession = useCallback(({ endDate = new Date(), silent = false } = {}) => {
+    const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
+    const formattedDate = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const formattedStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formattedEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const activityType = intentDetails?.categoryLabel || 'Focus Session';
+    const activityDescription = intentDetails?.description || '';
+
+    setSessions((prev) => {
+      const updatedSessions = [
+        ...prev,
+        {
+          number: prev.length + 1,
+          chainNumber: prev.length + 1,
+          date: formattedDate,
+          startTime: formattedStart,
+          endTime: formattedEnd,
+          activityType,
+          activityDescription,
+        },
+      ];
+
+      if (storageKey && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
+        } catch (error) {
+          console.warn('Failed to persist sessions', error);
+        }
+      }
+
+      if (!silent && !isAuxiliary) {
+        setModalSession(updatedSessions.length);
+      }
+
+      return updatedSessions;
+    });
+  }, [sessionStart, baseDuration, intentDetails, storageKey, isAuxiliary]);
+
   useEffect(() => {
     if (!isActive) {
       return undefined;
@@ -118,40 +183,13 @@ const TimerPage = ({
 
     if (timeLeft === 0) {
       setIsActive(false);
-      const endDate = new Date();
-      const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
-      const formattedDate = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-      const formattedStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const formattedEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const activityType = intentDetails?.categoryLabel || 'Focus Session';
-      const activityDescription = intentDetails?.description || '';
-
-      setSessions((prev) => {
-        const updatedSessions = [
-          ...prev,
-          {
-            number: prev.length + 1,
-            date: formattedDate,
-            startTime: formattedStart,
-            endTime: formattedEnd,
-            activityType,
-            activityDescription,
-          },
-        ];
-
-        if (storageKey && typeof window !== 'undefined') {
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
-          } catch (error) {
-            console.warn('Failed to persist sessions', error);
-          }
-        }
-
-        setModalSession(updatedSessions.length);
-        return updatedSessions;
-      });
-
-      setShowModal(true);
+      finalizeSession({ silent: isAuxiliary });
+      if (isAuxiliary) {
+        setGraceSeconds(5);
+        setShowModal(false);
+      } else {
+        setShowModal(true);
+      }
       setSessionStart(null);
       setShowFocusFailPrompt(false);
       return undefined;
@@ -162,7 +200,35 @@ const TimerPage = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, sessionStart, baseDuration, storageKey]);
+  }, [isActive, timeLeft, finalizeSession, isAuxiliary]);
+
+  const handleGraceExpired = useCallback(() => {
+    setGraceSeconds(null);
+    setTimeLeft(baseDuration);
+    setShowModal(false);
+    if (storageKey && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (error) {
+        console.warn('Failed to clear sessions', error);
+      }
+    }
+    setSessions([]);
+  }, [baseDuration, storageKey]);
+
+  useEffect(() => {
+    if (!isAuxiliary || graceSeconds === null) {
+      return undefined;
+    }
+    if (graceSeconds === 0) {
+      handleGraceExpired();
+      return undefined;
+    }
+    const countdown = setTimeout(() => {
+      setGraceSeconds((prev) => (prev > 0 ? prev - 1 : prev));
+    }, 1000);
+    return () => clearTimeout(countdown);
+  }, [graceSeconds, isAuxiliary, handleGraceExpired]);
 
   const progressPercent = useMemo(() => {
     if (baseDuration === 0) {
@@ -173,27 +239,88 @@ const TimerPage = ({
     return Math.min(Math.max(percentage, 8), 92);
   }, [baseDuration, timeLeft]);
 
+  const beginSession = useCallback(() => {
+    setSessionStart(new Date());
+    setIsActive(true);
+    setGraceSeconds(null);
+  }, []);
+
   const handleStart = () => {
     if (timeLeft > 0 && !isActive) {
-      if (intentStorageKey) {
+      setGraceSeconds(null);
+      if (intentStorageKey && isAuxiliary) {
         openIntentModal();
         return;
       }
-      setSessionStart(new Date());
-      setIsActive(true);
+      beginSession();
     }
   };
 
   const handleModalRestart = () => {
     setTimeLeft(baseDuration);
-    setSessionStart(new Date());
-    setIsActive(true);
+    beginSession();
     setShowModal(false);
   };
 
   const handleReturnToStudyRoom = () => {
     setShowModal(false);
     navigate('/');
+  };
+
+  useEffect(() => {
+    if (isAuxiliary || typeof window === 'undefined') {
+      return;
+    }
+    const autoStart = localStorage.getItem(AUTO_START_MAIN_KEY);
+    if (autoStart === '1' && !isActive && timeLeft > 0) {
+      localStorage.removeItem(AUTO_START_MAIN_KEY);
+      beginSession();
+    }
+  }, [isAuxiliary, isActive, timeLeft, beginSession]);
+
+  const handleImmediateStart = useCallback(() => {
+    if (isActive) {
+      finalizeSession({ silent: true });
+    }
+    setIsActive(false);
+    setTimeLeft(baseDuration);
+    setSessionStart(null);
+    setShowFocusFailPrompt(false);
+    setGraceSeconds(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(AUTO_START_MAIN_KEY, '1');
+      } catch (error) {
+        console.warn('Failed to schedule auto start', error);
+      }
+    }
+    navigate('/timer');
+  }, [isActive, finalizeSession, baseDuration, navigate]);
+
+  const handleCancelReservation = () => {
+    setShowCancelPrompt(true);
+  };
+
+  const handleCancelReservationConfirm = () => {
+    setShowCancelPrompt(false);
+    setIsActive(false);
+    setTimeLeft(baseDuration);
+    setSessionStart(null);
+    setGraceSeconds(null);
+    setShowModal(false);
+    setShowFocusFailPrompt(false);
+    setSessions([]);
+    if (storageKey && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (error) {
+        console.warn('Failed to clear sessions', error);
+      }
+    }
+  };
+
+  const handleCancelReservationClose = () => {
+    setShowCancelPrompt(false);
   };
 
   const handleFocusFailInitiate = () => {
@@ -282,8 +409,7 @@ const TimerPage = ({
         console.warn('Failed to persist session intent', error);
       }
     }
-    setSessionStart(new Date());
-    setIsActive(true);
+    beginSession();
     setIsIntentModalOpen(false);
   };
 
@@ -431,7 +557,9 @@ const TimerPage = ({
             </label>
             <div className="sacred-modal__actions">
               <p className="sacred-modal__warning">
-                Once you press Start Session, Sacred Seat protocol is in effect—stay fully focused for the entire timer or your record will be reset.
+                {isAuxiliary
+                  ? `Once you start this timer, you must begin the main task within ${auxiliaryWindowLabel}. If you don't, all records will be erased.`
+                  : 'Once you press Start Session, Sacred Seat protocol is in effect—stay fully focused for the entire timer or your record will be reset.'}
               </p>
               <button
                 type="button"
@@ -462,13 +590,22 @@ const TimerPage = ({
               {logEntries.map((session) => (
                 <div className="timer-log__entry" key={`${session.number}-${session.date}-${session.startTime}`}>
                   <div className="timer-log__meta">
-                    <span className="timer-log__number">#{session.number}</span>
-                    <span className="timer-log__date">{session.date}</span>
+                    {!isAuxiliary && (
+                      <span className="timer-log__number">{session.number}</span>
+                    )}
+                    {!isAuxiliary && <span className="timer-log__date">{session.date}</span>}
                   </div>
-                  <div className="timer-log__details">
-                    <div className="timer-log__activity">{session.activityType || 'Focus Session'}</div>
-                    {session.activityDescription && (
-                      <p className="timer-log__description">{session.activityDescription}</p>
+                  <div className={`timer-log__details${isAuxiliary ? ' timer-log__details--full' : ''}`}>
+                    {!isAuxiliary && (
+                      <>
+                        <div className="timer-log__activity">{session.activityType || 'Focus Session'}</div>
+                        {session.activityDescription && (
+                          <p className="timer-log__description">{session.activityDescription}</p>
+                        )}
+                      </>
+                    )}
+                    {isAuxiliary && (
+                      <div className="timer-log__activity">Successful Reservation #{session.chainNumber || session.number}</div>
                     )}
                   </div>
                   <div className="timer-log__time">
@@ -555,15 +692,36 @@ const TimerPage = ({
         </div>
       )}
 
-      {storageKey && isActive && (
+      {isActive && (
         <div className="controls controls--timer controls--secondary">
-          <button
-            type="button"
-            className="controls__fail"
-            onClick={handleFocusFailInitiate}
-          >
-            I lost focus
-          </button>
+          {isAuxiliary ? (
+            <>
+              <button
+                type="button"
+                className="controls__start-task"
+                onClick={handleImmediateStart}
+              >
+                Start Task Now
+              </button>
+              <button
+                type="button"
+                className="controls__cancel"
+                onClick={handleCancelReservation}
+              >
+                Cancel Reservation
+              </button>
+            </>
+          ) : (
+            storageKey && (
+              <button
+                type="button"
+                className="controls__fail"
+                onClick={handleFocusFailInitiate}
+              >
+                I lost focus
+              </button>
+            )
+          )}
         </div>
       )}
 
@@ -590,6 +748,51 @@ const TimerPage = ({
                 onClick={handleReturnToStudyRoom}
               >
                 Return to Study Room
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isAuxiliary && graceSeconds !== null && (
+        <div className="timer-modal__overlay" role="dialog" aria-modal="true">
+          <div className="timer-modal timer-modal--warning">
+            <h2 className="timer-modal__title">Auxiliary Session Complete</h2>
+            <p className="timer-modal__subtitle">
+              Start your main task now. Records reset in {graceSeconds}s if you don't continue.
+            </p>
+            <div className="timer-modal__actions">
+              <button
+                type="button"
+                className="timer-modal__primary"
+                onClick={handleImmediateStart}
+              >
+                Start Task Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCancelPrompt && (
+        <div className="timer-modal__overlay" role="dialog" aria-modal="true">
+          <div className="timer-modal timer-modal--warning">
+            <h2 className="timer-modal__title">Cancel Reservation?</h2>
+            <p className="timer-modal__subtitle">
+              Are you sure you want to cancel this reservation? All records will be erased if you do so.
+            </p>
+            <div className="timer-modal__actions">
+              <button
+                type="button"
+                className="timer-modal__secondary"
+                onClick={handleCancelReservationClose}
+              >
+                Keep Reservation
+              </button>
+              <button
+                type="button"
+                className="timer-modal__danger"
+                onClick={handleCancelReservationConfirm}
+              >
+                Yes, Cancel
               </button>
             </div>
           </div>
