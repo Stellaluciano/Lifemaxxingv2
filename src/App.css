@@ -435,6 +435,19 @@ body,
   gap: clamp(1.5rem, 4vw, 3rem);
 }
 
+.timer-page--active {
+  background: radial-gradient(circle at top right, rgba(77, 99, 255, 0.18), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(26, 33, 78, 0.65), rgba(12, 16, 35, 0.95));
+  color: #f5f7ff;
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.35);
+}
+
+.timer-page--active .timer-display__action {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f5f7ff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .timer-page__title {
   font-size: clamp(1.8rem, 3.8vw, 2.6rem);
   margin: 0;
@@ -442,6 +455,21 @@ body,
   color: #1f2333;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.timer-page__title--active {
+  color: #f5f7ff;
+}
+
+.timer-page__subtitle {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: rgba(31, 35, 51, 0.75);
+  text-align: center;
+}
+
+.timer-page--active .timer-page__subtitle {
+  color: rgba(245, 247, 255, 0.85);
 }
 
 .timer-intent {
@@ -473,6 +501,23 @@ body,
   margin: 0 0 0.35rem;
   color: rgba(31, 35, 51, 0.85);
   line-height: 1.6;
+}
+
+.timer-intent--active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #f5f7ff;
+}
+
+.timer-intent--active .timer-intent__category {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timer-intent--active .timer-intent__description {
+  color: rgba(245, 247, 255, 0.8);
+  font-size: 1rem;
 }
 
 .timer-intent__timestamp {

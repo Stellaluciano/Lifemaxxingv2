@@ -339,9 +339,15 @@ const TimerPage = ({
     }
   };
 
+  const activeTitle = isActive && intentDetails?.categoryLabel ? intentDetails.categoryLabel : null;
+  const activeSubtitle = isActive && intentDetails?.description ? intentDetails.description : null;
+
   return (
-    <div className="timer-page">
-      <h1 className="timer-page__title">{title}</h1>
+    <div className={`timer-page${isActive ? ' timer-page--active' : ''}`}>
+      <h1 className={`timer-page__title${activeTitle ? ' timer-page__title--active' : ''}`}>
+        {activeTitle || title}
+      </h1>
+      {activeSubtitle && <p className="timer-page__subtitle">{activeSubtitle}</p>}
       <div className="timer-display-wrapper">
         <div className="timer-display">{formatTime(timeLeft)}</div>
         <button
@@ -369,11 +375,13 @@ const TimerPage = ({
           <div className="timer-progress__line" />
         </div>
       </div>
-      <div className="controls controls--timer controls--primary">
-        <button type="button" onClick={handleStart} disabled={isActive || timeLeft === 0}>
-          Start
-        </button>
-      </div>
+      {!isActive && (
+        <div className="controls controls--timer controls--primary">
+          <button type="button" onClick={handleStart} disabled={timeLeft === 0}>
+            Start
+          </button>
+        </div>
+      )}
       {isIntentModalOpen && (
         <div
           className="sacred-modal__overlay"
@@ -472,15 +480,6 @@ const TimerPage = ({
           )}
         </div>
       )}
-      {intentDetails && (
-        <div className="timer-intent">
-          <div className="timer-intent__category">{intentDetails.categoryLabel}</div>
-          {intentDetails.description && (
-            <p className="timer-intent__description">{intentDetails.description}</p>
-          )}
-        </div>
-      )}
-
       {showDurationModal && (
         <div
           className="sacred-modal__overlay"

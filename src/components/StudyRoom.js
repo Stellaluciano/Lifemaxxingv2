@@ -18,7 +18,7 @@ const StudyRoom = () => {
 
   return (
     <div className="study-room">
-      <h1 className="study-room__title">Where do you want to sit?</h1>
+      <h1 className="study-room__title">Where would you like to sit?</h1>
       <div className="study-room__grid">
         {seats.map((seatIndex) => {
           const isSacred = seatIndex === sacredIndex;
