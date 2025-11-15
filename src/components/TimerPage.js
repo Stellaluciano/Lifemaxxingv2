@@ -582,7 +582,7 @@ const TimerPage = ({
       )}
       {storageKey && (
         <div className="timer-log">
-          <h2 className="timer-log__title">Focus Record</h2>
+          <h2 className="timer-log__title">{isAuxiliary ? 'Reservation Record' : 'Focus Record'}</h2>
           {logEntries.length === 0 ? (
             <p className="timer-log__empty">No sessions recorded yet. Stay focused to create your streak.</p>
           ) : (
