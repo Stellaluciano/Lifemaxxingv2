@@ -177,8 +177,12 @@ const TimerPage = ({
         await addDoc(collection(db, 'users', uid, colName), {
           startTimestamp: startDate,
           endTimestamp: endDate,
-          activityType,
-          activityDescription,
+          ...(isAuxiliary
+            ? {}
+            : {
+                activityType,
+                activityDescription,
+              }),
           createdAt: new Date(),
         });
         if (!silent && !isAuxiliary) {

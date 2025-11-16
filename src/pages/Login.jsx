@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -11,12 +12,14 @@ export default function Login() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
+  // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
       navigate("/");
     }
   }, [user, loading, navigate]);
 
+  // 📌 Email Login
   async function handleLogin() {
     try {
       setErrorMsg("");
@@ -26,11 +29,40 @@ export default function Login() {
     }
   }
 
+  // 📌 Google Login (also handles sign-up automatically)
+  async function handleGoogleLogin() {
+    try {
+      setErrorMsg("");
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+      const googleUser = result.user;
+
+      // Check if Firestore doc exists
+      const userRef = doc(db, "users", googleUser.uid);
+      const snap = await getDoc(userRef);
+
+      // If first time login → create user document
+      if (!snap.exists()) {
+        await setDoc(userRef, {
+          email: googleUser.email,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Google login failed. Please try again.");
+    }
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
         <h1 style={styles.title}>Log In</h1>
 
+        {/* Email input */}
         <input
           type="email"
           placeholder="Email"
@@ -39,6 +71,7 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
         />
 
+        {/* Password input */}
         <input
           type="password"
           placeholder="Password"
@@ -47,10 +80,22 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* Login button */}
         <button style={styles.button} onClick={handleLogin}>
           Log In
         </button>
 
+        {/* Google Login Button */}
+        <button style={styles.googleButton} onClick={handleGoogleLogin}>
+          <img
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            alt="Google"
+            style={styles.googleIcon}
+          />
+          Continue with Google
+        </button>
+
+        {/* Error message */}
         {errorMsg && <p style={styles.error}>{errorMsg}</p>}
       </div>
     </div>
@@ -99,6 +144,28 @@ const styles = {
     borderRadius: "12px",
     border: "none",
     cursor: "pointer",
+  },
+
+  // Google button
+  googleButton: {
+    width: "100%",
+    padding: "12px 16px",
+    marginTop: "16px",
+    background: "white",
+    border: "1px solid #dadce0",
+    borderRadius: "12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "500",
+    color: "#444",
+    gap: "10px",
+  },
+  googleIcon: {
+    width: "20px",
+    height: "20px",
   },
   error: {
     marginTop: "12px",
