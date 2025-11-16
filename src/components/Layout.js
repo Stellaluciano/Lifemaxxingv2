@@ -1,9 +1,12 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { auth } from '../firebase';
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const isRsip = location.pathname.startsWith('/rsip');
 
@@ -45,6 +48,27 @@ const Layout = () => {
               RSIP
             </NavLink>
           </nav>
+          <div className="top-nav__auth">
+            {!user ? (
+              <>
+                <NavLink to="/login" className="top-nav__login">
+                  Log In
+                </NavLink>
+                <NavLink to="/signup" className="top-nav__signup">
+                  Sign Up
+                </NavLink>
+              </>
+            ) : (
+              <>
+                <span className="top-nav__user">
+                  {user.email.split('@')[0]}
+                </span>
+                <button className="top-nav__logout" onClick={() => auth.signOut()}>
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </header>
       {isRsip ? (

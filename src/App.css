@@ -934,6 +934,75 @@ body,
   box-shadow: 0 30px 50px -28px rgba(255, 95, 109, 0.85);
 }
 
+/* Auth buttons in the top navigation bar */
+.top-nav__auth {
+  display: flex;
+  gap: 12px;
+}
+
+.top-nav__auth-button {
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 15px;
+  text-decoration: none;
+  color: #333;
+  background: #f1f2f5;
+  transition: 0.2s;
+}
+
+.top-nav__auth-button:hover {
+  background: #e2e4ea;
+}
+
+.top-nav__auth-button--primary {
+  background: #2d57ff;
+  color: white;
+}
+
+.top-nav__auth-button--primary:hover {
+  background: #1c3be7;
+}
+
+.top-nav__auth {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: 20px;
+}
+
+.top-nav__login,
+.top-nav__signup {
+  padding: 6px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.top-nav__login {
+  background: #f1f1f1;
+}
+
+.top-nav__signup {
+  background: #2d57ff;
+  color: white;
+}
+
+.top-nav__user {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+.top-nav__logout {
+  background: #ff4d4d;
+  padding: 6px 12px;
+  border: none;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
 .timer-modal__title {
   font-size: clamp(1.4rem, 2.8vw, 1.9rem);
   font-weight: 700;
