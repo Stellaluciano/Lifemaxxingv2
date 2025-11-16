@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ReactComponent as WalkerIcon } from '../assets/person.svg';
 import { ReactComponent as FlagIcon } from '../assets/flag.svg';
 import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 const formatTime = (seconds) => {
   const h = Math.floor(seconds / 3600);
@@ -75,6 +78,8 @@ const TimerPage = ({
   const [showDurationModal, setShowDurationModal] = useState(false);
   const auxiliaryWindowLabel = useMemo(() => describeDuration(baseDuration), [baseDuration]);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const uid = user?.uid;
 
   useEffect(() => {
     let initialDuration = durationSeconds;
@@ -96,24 +101,6 @@ const TimerPage = ({
     setCustomSeconds(seconds.toString());
     setDurationError('');
   }, [durationSeconds, durationPreferenceKey]);
-
-  useEffect(() => {
-    if (!storageKey || typeof window === 'undefined') {
-      setSessions([]);
-      return;
-    }
-    try {
-      const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (Array.isArray(stored)) {
-        setSessions(stored);
-      } else {
-        setSessions([]);
-      }
-    } catch (error) {
-      console.warn('Failed to parse stored sessions', error);
-      setSessions([]);
-    }
-  }, [storageKey]);
 
   useEffect(() => {
     if (!intentStorageKey || typeof window === 'undefined') {
@@ -138,43 +125,87 @@ const TimerPage = ({
     }
   }, [intentStorageKey]);
 
-  const finalizeSession = useCallback(({ endDate = new Date(), silent = false } = {}) => {
-    const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
-    const formattedDate = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    const formattedStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const formattedEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const activityType = intentDetails?.categoryLabel || 'Focus Session';
-    const activityDescription = intentDetails?.description || '';
+  useEffect(() => {
+    if (!uid) {
+      setSessions([]);
+      return undefined;
+    }
+    const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
+    const q = query(collection(db, 'users', uid, colName), orderBy('startTimestamp', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const total = snapshot.docs.length;
+        const mapped = snapshot.docs.map((docSnap, index) => {
+          const data = docSnap.data();
+          const startStamp = data.startTimestamp;
+          const endStamp = data.endTimestamp;
+          const startDate = startStamp?.toDate ? startStamp.toDate() : new Date(startStamp || Date.now());
+          const endDate = endStamp?.toDate ? endStamp.toDate() : new Date(endStamp || Date.now());
+          return {
+            id: docSnap.id,
+            number: total - index,
+            chainNumber: total - index,
+            date: startDate.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+            startTime: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            endTime: endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            activityType: data.activityType,
+            activityDescription: data.activityDescription,
+          };
+        });
+        setSessions(mapped);
+      },
+      (error) => {
+        console.warn('Failed to subscribe to sessions', error);
+        setSessions([]);
+      }
+    );
+    return () => unsubscribe();
+  }, [uid, isAuxiliary]);
 
-    setSessions((prev) => {
-      const updatedSessions = [
-        ...prev,
-        {
-          number: prev.length + 1,
-          chainNumber: prev.length + 1,
-          date: formattedDate,
-          startTime: formattedStart,
-          endTime: formattedEnd,
+  const finalizeSession = useCallback(
+    async ({ endDate = new Date(), silent = false } = {}) => {
+      if (!uid) {
+        return;
+      }
+      const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
+      const activityType = intentDetails?.categoryLabel || 'Focus Session';
+      const activityDescription = intentDetails?.description || '';
+      const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
+
+      try {
+        await addDoc(collection(db, 'users', uid, colName), {
+          startTimestamp: startDate,
+          endTimestamp: endDate,
           activityType,
           activityDescription,
-        },
-      ];
-
-      if (storageKey && typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
-        } catch (error) {
-          console.warn('Failed to persist sessions', error);
+          createdAt: new Date(),
+        });
+        if (!silent && !isAuxiliary) {
+          const nextNumber = sessions.length > 0 ? sessions[0].number + 1 : 1;
+          setModalSession(nextNumber);
         }
-      }
+      } catch (error) {
+      console.warn('Failed to persist session', error);
+    }
+  },
+  [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions]
+);
 
-      if (!silent && !isAuxiliary) {
-        setModalSession(updatedSessions.length);
-      }
-
-      return updatedSessions;
-    });
-  }, [sessionStart, baseDuration, intentDetails, storageKey, isAuxiliary]);
+  const clearSessions = useCallback(async () => {
+    if (!uid) {
+      setSessions([]);
+      return;
+    }
+    const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
+    try {
+      const colRef = collection(db, 'users', uid, colName);
+      const snap = await getDocs(colRef);
+      await Promise.all(snap.docs.map((docSnap) => deleteDoc(doc(db, 'users', uid, colName, docSnap.id))));
+    } catch (error) {
+      console.warn('Failed to clear sessions', error);
+    }
+  }, [uid, isAuxiliary]);
 
   useEffect(() => {
     if (!isActive) {
@@ -202,19 +233,12 @@ const TimerPage = ({
     return () => clearInterval(interval);
   }, [isActive, timeLeft, finalizeSession, isAuxiliary]);
 
-  const handleGraceExpired = useCallback(() => {
+  const handleGraceExpired = useCallback(async () => {
     setGraceSeconds(null);
     setTimeLeft(baseDuration);
     setShowModal(false);
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
-    setSessions([]);
-  }, [baseDuration, storageKey]);
+    await clearSessions();
+  }, [baseDuration, clearSessions]);
 
   useEffect(() => {
     if (!isAuxiliary || graceSeconds === null) {
@@ -301,7 +325,7 @@ const TimerPage = ({
     setShowCancelPrompt(true);
   };
 
-  const handleCancelReservationConfirm = () => {
+  const handleCancelReservationConfirm = async () => {
     setShowCancelPrompt(false);
     setIsActive(false);
     setTimeLeft(baseDuration);
@@ -309,14 +333,7 @@ const TimerPage = ({
     setGraceSeconds(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
-    setSessions([]);
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
+    await clearSessions();
   };
 
   const handleCancelReservationClose = () => {
@@ -334,15 +351,8 @@ const TimerPage = ({
     setShowFocusFailPrompt(false);
   };
 
-  const handleFocusFailConfirm = () => {
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
-    setSessions([]);
+  const handleFocusFailConfirm = async () => {
+    await clearSessions();
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
@@ -366,7 +376,7 @@ const TimerPage = ({
     if (!sessions?.length) {
       return [];
     }
-    return [...sessions].reverse();
+    return sessions;
   }, [sessions]);
 
   const openIntentModal = () => {
