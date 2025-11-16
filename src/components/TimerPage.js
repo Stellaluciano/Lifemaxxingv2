@@ -429,7 +429,9 @@ const TimerPage = ({
 
 
   const openDurationModal = () => {
-    setShowDurationModal(true);
+    if (!isActive) {
+      setShowDurationModal(true);
+    }
   };
 
   const closeDurationModal = () => {
@@ -490,13 +492,15 @@ const TimerPage = ({
       {activeSubtitle && <p className="timer-page__subtitle">{activeSubtitle}</p>}
       <div className="timer-display-wrapper">
         <div className="timer-display">{formatTime(timeLeft)}</div>
-        <button
-          type="button"
-          className="timer-display__action"
-          onClick={openDurationModal}
-        >
-          Adjust Timer
-        </button>
+        {!isActive && (
+          <button
+            type="button"
+            className="timer-display__action"
+            onClick={openDurationModal}
+          >
+            Adjust Timer
+          </button>
+        )}
       </div>
 
       <div className="timer-progress">
@@ -770,7 +774,7 @@ const TimerPage = ({
       {isAuxiliary && graceSeconds !== null && (
         <div className="timer-modal__overlay" role="dialog" aria-modal="true">
           <div className="timer-modal timer-modal--warning">
-            <h2 className="timer-modal__title">Auxiliary Session Complete</h2>
+            <h2 className="timer-modal__title">Time to LOCK IN</h2>
             <p className="timer-modal__subtitle">
               Start your main task now. Records reset in {graceSeconds}s if you don't continue.
             </p>

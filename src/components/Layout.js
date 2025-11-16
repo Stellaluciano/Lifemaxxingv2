@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { auth } from '../firebase';
+import UserMenu from './UserMenu.jsx';   // ⭐ new import
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -29,6 +29,7 @@ const Layout = () => {
           <NavLink to="/" className="top-nav__brand">
             Lifemaxxing
           </NavLink>
+
           <nav className="top-nav__tabs">
             <NavLink
               to="/"
@@ -48,6 +49,7 @@ const Layout = () => {
               RSIP
             </NavLink>
           </nav>
+
           <div className="top-nav__auth">
             {!user ? (
               <>
@@ -59,18 +61,13 @@ const Layout = () => {
                 </NavLink>
               </>
             ) : (
-              <>
-                <span className="top-nav__user">
-                  {user.email.split('@')[0]}
-                </span>
-                <button className="top-nav__logout" onClick={() => auth.signOut()}>
-                  Logout
-                </button>
-              </>
+              // ⭐ When logged in, show profile menu instead of text + Logout button
+              <UserMenu />
             )}
           </div>
         </div>
       </header>
+
       {isRsip ? (
         <main className="whiteboard whiteboard--rsip">
           <Outlet />

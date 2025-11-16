@@ -7,7 +7,8 @@ import RsipComingSoon from './pages/RsipComingSoon';
 import CorePrinciples from './pages/CorePrinciples';
 import AuthTest from './pages/AuthTest';
 import Signup from './pages/Signup.jsx';
-import Login from './pages/Login.jsx';          // ⭐ NEW
+import Login from './pages/Login.jsx';
+import Profile from './pages/Profile.jsx';
 import './App.css';
 import './firebase';
 import {
@@ -30,7 +31,8 @@ function App() {
           <Route path="/signup" element={<Signup />} />
 
           {/* ⭐ Login Route */}
-          <Route path="/login" element={<Login />} />    {/* ⭐ NEW */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
 
           <Route
             path="/timer"
