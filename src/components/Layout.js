@@ -61,7 +61,7 @@ const Layout = () => {
               }`}
               onClick={handleMainChainNavigate}
             >
-              Main Chain
+              Main Timer
             </button>
             <button
               type="button"
@@ -70,7 +70,7 @@ const Layout = () => {
               }`}
               onClick={handleAuxiliaryNavigate}
             >
-              Auxiliary Chain
+              Auxiliary Timer
             </button>
             <div className="sidebar__spacer" />
             <NavLink

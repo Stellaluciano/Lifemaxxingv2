@@ -25,6 +25,7 @@ function App() {
             path="/timer"
             element={
               <TimerPage
+                title="Main Timer"
                 intentStorageKey={SACRED_INTENT_STORAGE_KEY}
                 storageKey={MAIN_CHAIN_SESSION_KEY}
                 durationPreferenceKey={MAIN_CHAIN_DURATION_KEY}
@@ -36,7 +37,7 @@ function App() {
             element={
               <TimerPage
                 durationSeconds={15 * 60}
-                title="Auxiliary Chain"
+                title="Auxiliary Timer"
                 successPrefix="Auxiliary Session"
                 intentStorageKey={SACRED_INTENT_STORAGE_KEY}
                 durationPreferenceKey={AUX_CHAIN_DURATION_KEY}

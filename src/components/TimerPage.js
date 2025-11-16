@@ -248,7 +248,7 @@ const TimerPage = ({
   const handleStart = () => {
     if (timeLeft > 0 && !isActive) {
       setGraceSeconds(null);
-      if (intentStorageKey && isAuxiliary) {
+      if (intentStorageKey) {
         openIntentModal();
         return;
       }
