@@ -8,6 +8,7 @@ const Profile = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
+  const [gender, setGender] = useState('male');
   const [dateJoined, setDateJoined] = useState(null);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
@@ -32,6 +33,7 @@ const Profile = () => {
       setFirstName(data.firstName ?? '');
       setLastName(data.lastName ?? '');
       setDob(data.dob ?? '');
+      setGender(data.gender ?? 'male');
       setDateJoined(data.dateJoined?.toDate ? data.dateJoined.toDate() : data.dateJoined ?? null);
     } catch (error) {
       console.warn('Failed to load profile', error);
@@ -57,6 +59,7 @@ const Profile = () => {
           dob,
           photoURL: '',
           updatedAt: serverTimestamp(),
+          gender,
           dateJoined: dateJoined ?? serverTimestamp(),
         },
         { merge: true }
@@ -100,6 +103,14 @@ const Profile = () => {
           <label>
             Last Name
             <input type="text" value={lastName} onChange={(event) => setLastName(event.target.value)} />
+          </label>
+          <label>
+            Gender
+            <select value={gender} onChange={(event) => setGender(event.target.value)}>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-Binary</option>
+            </select>
           </label>
           <label>
             Date of Birth

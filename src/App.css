@@ -1087,6 +1087,14 @@ body,
   font-size: 15px;
 }
 
+.profile-form select {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  font-size: 15px;
+  background: #fff;
+}
+
 .profile-avatar-preview__frame {
   width: 100%;
   min-height: 140px;
