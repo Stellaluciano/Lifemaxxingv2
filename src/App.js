@@ -9,6 +9,7 @@ import AuthTest from './pages/AuthTest';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import Profile from './pages/Profile.jsx';
+import Wishlist from './pages/Wishlist.jsx';
 import './App.css';
 import './firebase';
 import {
@@ -33,6 +34,7 @@ function App() {
           {/* ⭐ Login Route */}
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/wishlist" element={<Wishlist />} />
 
           <Route
             path="/timer"

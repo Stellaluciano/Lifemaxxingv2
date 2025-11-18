@@ -61,6 +61,9 @@ const UserMenu = () => {
           <NavLink to="/profile" className="top-nav__dropdown-item" onClick={() => setOpen(false)}>
             Profile
           </NavLink>
+          <NavLink to="/wishlist" className="top-nav__dropdown-item" onClick={() => setOpen(false)}>
+            My Wishlist
+          </NavLink>
           <button
             type="button"
             className="top-nav__dropdown-item top-nav__dropdown-item--danger"
