@@ -1361,7 +1361,8 @@ body,
 }
 
 .wishlist-task-list li.completed {
-  opacity: 0.7;
+  background: rgba(46, 204, 113, 0.15);
+  border-color: rgba(46, 204, 113, 0.4);
 }
 
 .wishlist-task-list label {
@@ -1376,6 +1377,10 @@ body,
   font-size: 13px;
   font-weight: 600;
   color: rgba(31, 35, 51, 0.6);
+}
+
+.wishlist-task-list li.completed .wishlist-task-status {
+  color: #2e8b57;
 }
 
 .wishlist-progress-panel {
@@ -1431,6 +1436,68 @@ body,
 .wishlist-section--tasks small {
   display: block;
   color: rgba(31, 35, 51, 0.6);
+}
+
+.wishlist-section--history {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wishlist-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wishlist-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: rgba(246, 247, 251, 0.9);
+}
+
+.wishlist-history-item--empty {
+  background: rgba(160, 160, 160, 0.15);
+}
+
+.wishlist-history-date {
+  font-weight: 600;
+  color: #13162a;
+  min-width: 140px;
+}
+
+.wishlist-history-progress {
+  flex: 1;
+}
+
+.wishlist-history-progress__track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(31, 35, 51, 0.1);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.wishlist-history-progress__fill {
+  height: 100%;
+  background: linear-gradient(135deg, #2d57ff, #6a8dff);
+}
+
+.wishlist-history-progress__fill--empty {
+  background: rgba(31, 35, 51, 0.2);
+}
+
+.wishlist-history-label {
+  font-size: 13px;
+  color: rgba(31, 35, 51, 0.7);
 }
 
 .top-nav__dropdown-item + .top-nav__dropdown-item {
@@ -1582,6 +1649,22 @@ body,
   gap: 0.85rem;
 }
 
+.timer-modal__warning {
+  background: rgba(255, 77, 109, 0.1);
+  border: 1px solid rgba(255, 77, 109, 0.3);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  color: #8a2436;
+  line-height: 1.4;
+}
+
+.timer-modal__confirm-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .timer-modal__primary {
   border: none;
   border-radius: 16px;
@@ -1598,6 +1681,16 @@ body,
 .timer-modal__primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 28px 60px -28px rgba(64, 173, 255, 0.7);
+}
+
+.timer-modal__primary--danger {
+  background: linear-gradient(135deg, #34c759, #0fb668);
+  box-shadow: 0 24px 55px -25px rgba(52, 199, 89, 0.5);
+}
+
+.timer-modal__primary--success {
+  background: linear-gradient(135deg, #34c759, #0fb668);
+  box-shadow: 0 24px 55px -25px rgba(52, 199, 89, 0.5);
 }
 
 .timer-modal__secondary {

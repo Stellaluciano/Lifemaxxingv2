@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   doc,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -12,9 +13,35 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 
-const getTodayKey = () => {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
+const DEFAULT_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+const formatDateKey = (date, timeZone) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date);
+  }
+};
+
+const formatDisplayDate = (key, timeZone) => {
+  const [year, month, day] = key.split('-').map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  return new Intl.DateTimeFormat([], {
+    timeZone: timeZone || 'UTC',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(utcDate);
 };
 
 const createId = () =>
@@ -33,8 +60,12 @@ const Wishlist = () => {
   const [tasksLoading, setTasksLoading] = useState(true);
   const [tasksError, setTasksError] = useState('');
   const [newTask, setNewTask] = useState('');
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState('');
+  const [timeZone, setTimeZone] = useState(DEFAULT_TIME_ZONE);
 
-  const todayKey = getTodayKey();
+  const todayKey = useMemo(() => formatDateKey(new Date(), timeZone), [timeZone]);
 
   const directionsCollectionRef = useMemo(() => {
     if (!user) {
@@ -50,6 +81,20 @@ const Wishlist = () => {
     return doc(db, 'users', user.uid, 'dailyTasks', todayKey);
   }, [user, todayKey]);
 
+  const tasksCollectionRef = useMemo(() => {
+    if (!user) {
+      return null;
+    }
+    return collection(db, 'users', user.uid, 'dailyTasks');
+  }, [user]);
+
+  const profileDocRef = useMemo(() => {
+    if (!user) {
+      return null;
+    }
+    return doc(db, 'users', user.uid, 'profile', 'details');
+  }, [user]);
+
   const persistTasks = useCallback(
     async (nextTasks) => {
       if (!todayTaskDocRef) {
@@ -61,6 +106,7 @@ const Wishlist = () => {
           {
             tasks: nextTasks,
             date: todayKey,
+            timeZone,
             updatedAt: serverTimestamp(),
           },
           { merge: true }
@@ -70,8 +116,27 @@ const Wishlist = () => {
         setTasksError('Failed to save tasks. Try again.');
       }
     },
-    [todayKey, todayTaskDocRef]
+    [todayKey, timeZone, todayTaskDocRef]
   );
+
+  useEffect(() => {
+    if (!profileDocRef) {
+      setTimeZone(DEFAULT_TIME_ZONE);
+      return undefined;
+    }
+    const unsub = onSnapshot(
+      profileDocRef,
+      (snapshot) => {
+        const data = snapshot.data();
+        setTimeZone(data?.timeZone || DEFAULT_TIME_ZONE);
+      },
+      (error) => {
+        console.warn('Failed to load profile for timezone', error);
+        setTimeZone(DEFAULT_TIME_ZONE);
+      }
+    );
+    return () => unsub();
+  }, [profileDocRef]);
 
   useEffect(() => {
     if (!directionsCollectionRef) {
@@ -125,6 +190,48 @@ const Wishlist = () => {
     );
     return () => unsub();
   }, [todayTaskDocRef]);
+
+  useEffect(() => {
+    if (!tasksCollectionRef) {
+      setHistory([]);
+      return undefined;
+    }
+    setHistoryLoading(true);
+    const q = query(tasksCollectionRef, orderBy('date', 'desc'), limit(14));
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const entries = snapshot.docs
+          .map((docSnap) => {
+            const data = docSnap.data();
+            const dateValue = data.date || docSnap.id;
+            const taskList = Array.isArray(data.tasks) ? data.tasks : [];
+            const hasTasks = taskList.length > 0;
+            const percent = hasTasks
+              ? Math.round((taskList.filter((task) => task.completed).length / taskList.length) * 100)
+              : 0;
+            return {
+              id: docSnap.id,
+              date: dateValue,
+              percent,
+              hasTasks,
+              timeZone: data.timeZone || DEFAULT_TIME_ZONE,
+            };
+          })
+          .filter((entry) => entry.date !== todayKey);
+        setHistory(entries);
+        setHistoryLoading(false);
+        setHistoryError('');
+      },
+      (error) => {
+        console.warn('Failed to load history', error);
+        setHistory([]);
+        setHistoryLoading(false);
+        setHistoryError('Unable to load completion history.');
+      }
+    );
+    return () => unsub();
+  }, [tasksCollectionRef, todayKey]);
 
   const handleAddDirection = async (event) => {
     event.preventDefault();
@@ -271,7 +378,7 @@ const Wishlist = () => {
                       <span>{task.text}</span>
                     </label>
                     <span className="wishlist-task-status">
-                      {task.completed ? 'Done' : 'Pending'}
+                      {task.completed ? 'Completed' : 'Pending'}
                     </span>
                   </li>
                 ))
@@ -307,6 +414,48 @@ const Wishlist = () => {
           </div>
           <small>Pie chart resets every day at 23:59.</small>
         </div>
+      </section>
+
+      <section className="wishlist-section wishlist-section--history">
+        <header>
+          <h2>Daily Completion History</h2>
+          <p>Track how consistently you execute on your intentions.</p>
+        </header>
+        {historyError && <div className="wishlist-error">{historyError}</div>}
+        {historyLoading ? (
+          <div className="wishlist-loading">Loading history…</div>
+        ) : history.length === 0 ? (
+          <p className="wishlist-empty">No history recorded yet.</p>
+        ) : (
+          <ul className="wishlist-history-list">
+            {history.map((entry) => {
+              const formattedDate = entry.date
+                ? formatDisplayDate(entry.date, entry.timeZone)
+                : entry.id;
+              return (
+                <li
+                  key={entry.id}
+                  className={`wishlist-history-item${entry.hasTasks ? '' : ' wishlist-history-item--empty'}`}
+                >
+                  <div className="wishlist-history-date">{formattedDate}</div>
+                  <div className="wishlist-history-progress">
+                    <div className="wishlist-history-progress__track">
+                      <div
+                        className={`wishlist-history-progress__fill${
+                          entry.hasTasks ? '' : ' wishlist-history-progress__fill--empty'
+                        }`}
+                        style={{ width: entry.hasTasks ? `${entry.percent}%` : '100%' }}
+                      />
+                    </div>
+                    <span className="wishlist-history-label">
+                      {entry.hasTasks ? `${entry.percent}% completed` : 'No tasks added'}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </div>
   );

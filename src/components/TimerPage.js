@@ -1,7 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ReactComponent as WalkerIcon } from '../assets/person.svg';
 import { ReactComponent as FlagIcon } from '../assets/flag.svg';
+import mainCompletionSound from '../assets/main-timer-completion.mp3';
+import auxiliaryCompletionSound from '../assets/auxiliary-timer-completion-warning.mp3';
+import startTimerSound from '../assets/start-timer.mp3';
 import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -59,6 +62,7 @@ const TimerPage = ({
   const [baseDuration, setBaseDuration] = useState(durationSeconds);
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [isActive, setIsActive] = useState(false);
+  const [targetTimestamp, setTargetTimestamp] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalSession, setModalSession] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -76,15 +80,49 @@ const TimerPage = ({
   const [graceSeconds, setGraceSeconds] = useState(null);
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+  const [confirmContinue, setConfirmContinue] = useState(false);
   const auxiliaryWindowLabel = useMemo(() => describeDuration(baseDuration), [baseDuration]);
   const navigate = useNavigate();
   const { user } = useAuth();
   const uid = user?.uid;
+  const mainSoundRef = useRef(null);
+  const auxSoundRef = useRef(null);
+  const startSoundRef = useRef(null);
+
+  const userDurationPreferenceKey = useMemo(() => {
+    if (!durationPreferenceKey) {
+      return null;
+    }
+    if (!uid) {
+      return durationPreferenceKey;
+    }
+    return `${durationPreferenceKey}-${uid}`;
+  }, [durationPreferenceKey, uid]);
+
+  useEffect(() => {
+    mainSoundRef.current = new Audio(mainCompletionSound);
+    auxSoundRef.current = new Audio(auxiliaryCompletionSound);
+    startSoundRef.current = new Audio(startTimerSound);
+    return () => {
+      if (mainSoundRef.current) {
+        mainSoundRef.current.pause();
+        mainSoundRef.current = null;
+      }
+      if (auxSoundRef.current) {
+        auxSoundRef.current.pause();
+        auxSoundRef.current = null;
+      }
+      if (startSoundRef.current) {
+        startSoundRef.current.pause();
+        startSoundRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let initialDuration = durationSeconds;
-    if (typeof window !== 'undefined' && durationPreferenceKey) {
-      const storedDuration = Number(localStorage.getItem(durationPreferenceKey));
+    if (typeof window !== 'undefined' && userDurationPreferenceKey) {
+      const storedDuration = Number(localStorage.getItem(userDurationPreferenceKey));
       if (!Number.isNaN(storedDuration) && storedDuration > 0) {
         initialDuration = storedDuration;
       }
@@ -95,12 +133,14 @@ const TimerPage = ({
     setShowModal(false);
     setModalSession(null);
     setSessionStart(null);
+    setTargetTimestamp(null);
+    setConfirmContinue(false);
     const { hours, minutes, seconds } = breakdownDuration(initialDuration);
     setCustomHours(hours.toString());
     setCustomMinutes(minutes.toString());
     setCustomSeconds(seconds.toString());
     setDurationError('');
-  }, [durationSeconds, durationPreferenceKey]);
+  }, [durationSeconds, userDurationPreferenceKey]);
 
   useEffect(() => {
     if (!intentStorageKey || typeof window === 'undefined') {
@@ -183,7 +223,6 @@ const TimerPage = ({
                 activityType,
                 activityDescription,
               }),
-          createdAt: new Date(),
         });
         if (!silent && !isAuxiliary) {
           const nextNumber = sessions.length > 0 ? sessions[0].number + 1 : 1;
@@ -212,35 +251,41 @@ const TimerPage = ({
   }, [uid, isAuxiliary]);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive || !targetTimestamp) {
       return undefined;
     }
 
-    if (timeLeft === 0) {
-      setIsActive(false);
-      finalizeSession({ silent: isAuxiliary });
-      if (isAuxiliary) {
-        setGraceSeconds(5);
-        setShowModal(false);
-      } else {
-        setShowModal(true);
+    const tick = () => {
+      const remainingMs = Math.max(0, targetTimestamp - Date.now());
+      const nextSeconds = Math.ceil(remainingMs / 1000);
+      setTimeLeft(nextSeconds);
+      if (remainingMs <= 0) {
+        setIsActive(false);
+        setTargetTimestamp(null);
+        finalizeSession({ silent: isAuxiliary });
+        if (isAuxiliary) {
+          auxSoundRef.current?.play().catch(() => {});
+          setGraceSeconds(5);
+          setShowModal(false);
+        } else {
+          mainSoundRef.current?.play().catch(() => {});
+          setShowModal(true);
+        }
+        setSessionStart(null);
+        setShowFocusFailPrompt(false);
       }
-      setSessionStart(null);
-      setShowFocusFailPrompt(false);
-      return undefined;
-    }
+    };
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : prev));
-    }, 1000);
-
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, finalizeSession, isAuxiliary]);
+  }, [isActive, targetTimestamp, finalizeSession, isAuxiliary]);
 
   const handleGraceExpired = useCallback(async () => {
     setGraceSeconds(null);
     setTimeLeft(baseDuration);
     setShowModal(false);
+    setTargetTimestamp(null);
     await clearSessions();
   }, [baseDuration, clearSessions]);
 
@@ -268,10 +313,13 @@ const TimerPage = ({
   }, [baseDuration, timeLeft]);
 
   const beginSession = useCallback(() => {
-    setSessionStart(new Date());
+    const startDate = new Date();
+    setSessionStart(startDate);
+    setTargetTimestamp(startDate.getTime() + baseDuration * 1000);
     setIsActive(true);
     setGraceSeconds(null);
-  }, []);
+    startSoundRef.current?.play().catch(() => {});
+  }, [baseDuration]);
 
   const handleStart = () => {
     if (timeLeft > 0 && !isActive) {
@@ -288,11 +336,25 @@ const TimerPage = ({
     setTimeLeft(baseDuration);
     beginSession();
     setShowModal(false);
+    setConfirmContinue(false);
   };
 
   const handleReturnToStudyRoom = () => {
     setShowModal(false);
     navigate('/');
+    setConfirmContinue(false);
+  };
+
+  const handleContinueInitiate = () => {
+    setConfirmContinue(true);
+  };
+
+  const handleContinueCancel = () => {
+    setConfirmContinue(false);
+  };
+
+  const handleContinueConfirm = () => {
+    handleModalRestart();
   };
 
   useEffect(() => {
@@ -313,8 +375,11 @@ const TimerPage = ({
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setShowFocusFailPrompt(false);
     setGraceSeconds(null);
+    auxSoundRef.current?.pause();
+    auxSoundRef.current && (auxSoundRef.current.currentTime = 0);
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(AUTO_START_MAIN_KEY, '1');
@@ -334,6 +399,7 @@ const TimerPage = ({
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setGraceSeconds(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
@@ -360,6 +426,7 @@ const TimerPage = ({
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
   };
@@ -423,6 +490,7 @@ const TimerPage = ({
         console.warn('Failed to persist session intent', error);
       }
     }
+    setTimeLeft(baseDuration);
     beginSession();
     setIsIntentModalOpen(false);
   };
@@ -469,12 +537,13 @@ const TimerPage = ({
     setIsActive(false);
     setShowModal(false);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setDurationError('');
     setShowDurationModal(false);
 
-    if (typeof window !== 'undefined' && durationPreferenceKey) {
+    if (typeof window !== 'undefined' && userDurationPreferenceKey) {
       try {
-        localStorage.setItem(durationPreferenceKey, String(newDuration));
+        localStorage.setItem(userDurationPreferenceKey, String(newDuration));
       } catch (error) {
         console.warn('Failed to persist custom duration', error);
       }
@@ -753,20 +822,44 @@ const TimerPage = ({
               You crushed that focus block. Ready to keep the momentum going?
             </p>
             <div className="timer-modal__actions">
-              <button
-                type="button"
-                className="timer-modal__primary"
-                onClick={handleModalRestart}
-              >
-                Continue Same Task
-              </button>
-              <button
-                type="button"
-                className="timer-modal__secondary"
-                onClick={handleReturnToStudyRoom}
-              >
-                Return to Study Room
-              </button>
+              {!confirmContinue ? (
+                <>
+                  <button
+                    type="button"
+                    className="timer-modal__primary"
+                    onClick={handleContinueInitiate}
+                  >
+                    Continue Same Task
+                  </button>
+                  <button
+                    type="button"
+                    className="timer-modal__secondary"
+                    onClick={handleReturnToStudyRoom}
+                  >
+                    Return to Study Room
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="timer-modal__warning">
+                    <strong>Warning:</strong> Sacred Seat protocol will restart. If you lose focus this streak will reset.
+                  </div>
+                  <button
+                    type="button"
+                    className="timer-modal__primary timer-modal__primary--success"
+                    onClick={handleContinueConfirm}
+                  >
+                    Yes, continue this task
+                  </button>
+                  <button
+                    type="button"
+                    className="timer-modal__secondary"
+                    onClick={handleReturnToStudyRoom}
+                  >
+                    Return to Study Room
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

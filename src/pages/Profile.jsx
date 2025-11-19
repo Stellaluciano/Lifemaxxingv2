@@ -13,6 +13,21 @@ import { db } from '../firebase';
 const DAYS_IN_WEEK = 7;
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DEFAULT_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+const TIME_ZONE_OPTIONS = [
+  'UTC',
+  'America/New_York',
+  'America/Chicago',
+  'America/Los_Angeles',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Singapore',
+  'Australia/Sydney',
+];
 
 const buildYearHeatmap = (counts, year) => {
   const startOfYear = new Date(year, 0, 1);
@@ -52,6 +67,7 @@ const Profile = () => {
   const [gender, setGender] = useState('male');
   const [dob, setDob] = useState('');
   const [dateJoined, setDateJoined] = useState(null);
+  const [timeZone, setTimeZone] = useState(DEFAULT_TIME_ZONE);
   const [heatmapYear] = useState(2025);
   const [heatmapData, setHeatmapData] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -78,6 +94,7 @@ const Profile = () => {
       setLastName(data.lastName ?? '');
       setGender(data.gender ?? 'male');
       setDob(data.dob ?? '');
+      setTimeZone(data.timeZone ?? DEFAULT_TIME_ZONE);
       setDateJoined(data.dateJoined?.toDate ? data.dateJoined.toDate() : data.dateJoined ?? null);
     } catch (error) {
       console.warn('Failed to load profile', error);
@@ -157,6 +174,7 @@ const Profile = () => {
           lastName,
           gender,
           dob,
+          timeZone,
           dateJoined: dateJoined ?? serverTimestamp(),
           updatedAt: serverTimestamp(),
         },
@@ -231,6 +249,16 @@ const Profile = () => {
             <label>
               Date of Birth
               <input type="date" value={dob} onChange={(event) => setDob(event.target.value)} />
+            </label>
+            <label>
+              Time Zone
+              <select value={timeZone} onChange={(event) => setTimeZone(event.target.value)}>
+                {TIME_ZONE_OPTIONS.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <button type="submit" className="profile-save" disabled={saving}>
