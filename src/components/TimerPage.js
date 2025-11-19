@@ -6,7 +6,7 @@ import mainCompletionSound from '../assets/main-timer-completion.mp3';
 import auxiliaryCompletionSound from '../assets/auxiliary-timer-completion-warning.mp3';
 import startTimerSound from '../assets/start-timer.mp3';
 import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
-import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 
@@ -98,6 +98,41 @@ const TimerPage = ({
     }
     return `${durationPreferenceKey}-${uid}`;
   }, [durationPreferenceKey, uid]);
+
+  const timerDocRef = useMemo(() => {
+    if (!uid) {
+      return null;
+    }
+    return doc(db, 'users', uid, 'activeTimers', isAuxiliary ? 'aux' : 'main');
+  }, [uid, isAuxiliary]);
+
+  const clearActiveTimerDoc = useCallback(() => {
+    if (!timerDocRef) {
+      return;
+    }
+    deleteDoc(timerDocRef).catch(() => {});
+  }, [timerDocRef]);
+
+  const persistActiveTimer = useCallback(
+    (startDate, targetDate, intentSnapshot) => {
+      if (!timerDocRef) {
+        return;
+      }
+      setDoc(
+        timerDocRef,
+        {
+          startTimestamp: startDate,
+          targetTimestamp: targetDate,
+          baseDuration,
+          intentDetails: intentSnapshot ?? null,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      ).catch(() => {});
+    },
+    [timerDocRef, baseDuration]
+  );
+
 
   useEffect(() => {
     mainSoundRef.current = new Audio(mainCompletionSound);
@@ -204,11 +239,15 @@ const TimerPage = ({
   }, [uid, isAuxiliary]);
 
   const finalizeSession = useCallback(
-    async ({ endDate = new Date(), silent = false } = {}) => {
+    async ({ endDate = new Date(), silent = false, startOverride = null } = {}) => {
       if (!uid) {
         return;
       }
-      const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
+      const startDate = startOverride
+        ? new Date(startOverride)
+        : sessionStart
+        ? new Date(sessionStart)
+        : new Date(endDate.getTime() - baseDuration * 1000);
       const activityType = intentDetails?.categoryLabel || 'Focus Session';
       const activityDescription = intentDetails?.description || '';
       const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
@@ -228,12 +267,62 @@ const TimerPage = ({
           const nextNumber = sessions.length > 0 ? sessions[0].number + 1 : 1;
           setModalSession(nextNumber);
         }
+        clearActiveTimerDoc();
       } catch (error) {
       console.warn('Failed to persist session', error);
     }
   },
-  [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions]
+  [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions, clearActiveTimerDoc]
 );
+
+  useEffect(() => {
+    if (!timerDocRef) {
+      return undefined;
+    }
+    const unsubscribe = onSnapshot(
+      timerDocRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          return;
+        }
+        const data = snapshot.data();
+        const targetDate = data.targetTimestamp?.toDate
+          ? data.targetTimestamp.toDate()
+          : data.targetTimestamp
+          ? new Date(data.targetTimestamp)
+          : null;
+        if (!targetDate) {
+          return;
+        }
+        const startDate = data.startTimestamp?.toDate
+          ? data.startTimestamp.toDate()
+          : data.startTimestamp
+          ? new Date(data.startTimestamp)
+          : new Date();
+        const remainingMs = targetDate.getTime() - Date.now();
+        if (remainingMs <= 0) {
+          finalizeSession({ endDate: targetDate, silent: isAuxiliary, startOverride: startDate });
+          clearActiveTimerDoc();
+          return;
+        }
+        if (!isActive) {
+          setBaseDuration(data.baseDuration || baseDuration);
+          setSessionStart(startDate);
+          setTargetTimestamp(targetDate.getTime());
+          setTimeLeft(Math.ceil(remainingMs / 1000));
+          setIsActive(true);
+          setGraceSeconds(null);
+          setShowModal(false);
+          setShowFocusFailPrompt(false);
+          if (data.intentDetails) {
+            setIntentDetails(data.intentDetails);
+          }
+        }
+      },
+      () => {}
+    );
+    return () => unsubscribe();
+  }, [timerDocRef, isActive, baseDuration, clearActiveTimerDoc, finalizeSession, isAuxiliary]);
 
   const clearSessions = useCallback(async () => {
     if (!uid) {
@@ -263,6 +352,7 @@ const TimerPage = ({
         setIsActive(false);
         setTargetTimestamp(null);
         finalizeSession({ silent: isAuxiliary });
+        clearActiveTimerDoc();
         if (isAuxiliary) {
           auxSoundRef.current?.play().catch(() => {});
           setGraceSeconds(5);
@@ -279,15 +369,16 @@ const TimerPage = ({
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isActive, targetTimestamp, finalizeSession, isAuxiliary]);
+  }, [isActive, targetTimestamp, finalizeSession, isAuxiliary, clearActiveTimerDoc]);
 
   const handleGraceExpired = useCallback(async () => {
     setGraceSeconds(null);
     setTimeLeft(baseDuration);
     setShowModal(false);
     setTargetTimestamp(null);
+    clearActiveTimerDoc();
     await clearSessions();
-  }, [baseDuration, clearSessions]);
+  }, [baseDuration, clearSessions, clearActiveTimerDoc]);
 
   useEffect(() => {
     if (!isAuxiliary || graceSeconds === null) {
@@ -315,11 +406,13 @@ const TimerPage = ({
   const beginSession = useCallback(() => {
     const startDate = new Date();
     setSessionStart(startDate);
-    setTargetTimestamp(startDate.getTime() + baseDuration * 1000);
+    const targetMs = startDate.getTime() + baseDuration * 1000;
+    setTargetTimestamp(targetMs);
     setIsActive(true);
     setGraceSeconds(null);
     startSoundRef.current?.play().catch(() => {});
-  }, [baseDuration]);
+    persistActiveTimer(startDate, new Date(targetMs), intentDetails);
+  }, [baseDuration, persistActiveTimer, intentDetails]);
 
   const handleStart = () => {
     if (timeLeft > 0 && !isActive) {
@@ -349,10 +442,6 @@ const TimerPage = ({
     setConfirmContinue(true);
   };
 
-  const handleContinueCancel = () => {
-    setConfirmContinue(false);
-  };
-
   const handleContinueConfirm = () => {
     handleModalRestart();
   };
@@ -378,6 +467,7 @@ const TimerPage = ({
     setTargetTimestamp(null);
     setShowFocusFailPrompt(false);
     setGraceSeconds(null);
+    clearActiveTimerDoc();
     auxSoundRef.current?.pause();
     auxSoundRef.current && (auxSoundRef.current.currentTime = 0);
     if (typeof window !== 'undefined') {
@@ -388,7 +478,7 @@ const TimerPage = ({
       }
     }
     navigate('/timer');
-  }, [isActive, finalizeSession, baseDuration, navigate]);
+  }, [isActive, finalizeSession, baseDuration, navigate, clearActiveTimerDoc]);
 
   const handleCancelReservation = () => {
     setShowCancelPrompt(true);
@@ -403,6 +493,7 @@ const TimerPage = ({
     setGraceSeconds(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
+    clearActiveTimerDoc();
     await clearSessions();
   };
 
@@ -429,6 +520,7 @@ const TimerPage = ({
     setTargetTimestamp(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
+    clearActiveTimerDoc();
   };
 
   const requiresCustomCategory = selectedCategory === 'custom';
@@ -540,6 +632,7 @@ const TimerPage = ({
     setTargetTimestamp(null);
     setDurationError('');
     setShowDurationModal(false);
+    clearActiveTimerDoc();
 
     if (typeof window !== 'undefined' && userDurationPreferenceKey) {
       try {
