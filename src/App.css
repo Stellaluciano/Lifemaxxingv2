@@ -1660,7 +1660,8 @@ body.timer-active .sidebar__button--active {
 .focus-record-page {
   padding: 32px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .focus-record-card {

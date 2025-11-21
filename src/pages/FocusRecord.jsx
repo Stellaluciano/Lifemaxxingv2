@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, deleteDoc, doc, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { ReactComponent as CrackedTrophyIcon } from '../assets/trophy-cracked.svg';
+import './FocusRecord.css';
 
 const FocusRecord = () => {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
+  const [graveyardRecords, setGraveyardRecords] = useState([]);
 
   useEffect(() => {
     if (!user) {
       setSessions([]);
+      setGraveyardRecords([]);
       return undefined;
     }
     const q = query(collection(db, 'users', user.uid, 'mainSessions'), orderBy('startTimestamp', 'desc'));
@@ -35,8 +39,36 @@ const FocusRecord = () => {
       },
       () => setSessions([])
     );
-    return () => unsub();
+
+    const graveyardQ = query(collection(db, 'users', user.uid, 'graveyard'), orderBy('timestamp', 'desc'));
+    const graveyardUnsub = onSnapshot(
+      graveyardQ,
+      (snapshot) => {
+        const mapped = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+        setGraveyardRecords(mapped);
+      },
+      () => setGraveyardRecords([])
+    );
+
+    return () => {
+      unsub();
+      graveyardUnsub();
+    };
   }, [user]);
+
+  const clearGraveyard = async () => {
+    if (!user) return;
+    try {
+      const colRef = collection(db, 'users', user.uid, 'graveyard');
+      const snap = await getDocs(colRef);
+      await Promise.all(snap.docs.map((docSnap) => deleteDoc(doc(db, 'users', user.uid, 'graveyard', docSnap.id))));
+    } catch (error) {
+      console.warn('Failed to clear graveyard', error);
+    }
+  };
 
   if (!user) {
     return (
@@ -83,6 +115,31 @@ const FocusRecord = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="focus-record-card focus-record-card--stretch" style={{ marginTop: '2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0 }}>Focus Graveyard</h2>
+          {graveyardRecords.length > 0 && (
+            <button onClick={clearGraveyard} className="graveyard-clear-btn">
+              Clear Graveyard
+            </button>
+          )}
+        </div>
+        {graveyardRecords.length === 0 ? (
+          <p className="focus-record-empty">No failed chains recorded.</p>
+        ) : (
+          <div className="graveyard-grid">
+            {graveyardRecords.map((record) => (
+              <div key={record.id} className="graveyard-item">
+                <div className="graveyard-icon">
+                  <CrackedTrophyIcon />
+                </div>
+                <span className="graveyard-count">{record.chainLength}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
