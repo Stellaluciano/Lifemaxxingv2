@@ -5,6 +5,12 @@ import StudyRoom from './components/StudyRoom';
 import TimerPage from './components/TimerPage';
 import RsipComingSoon from './pages/RsipComingSoon';
 import CorePrinciples from './pages/CorePrinciples';
+import AuthTest from './pages/AuthTest';
+import Signup from './pages/Signup.jsx';
+import Login from './pages/Login.jsx';
+import Profile from './pages/Profile.jsx';
+import FocusRecord from './pages/FocusRecord.jsx';
+import Wishlist from './pages/Wishlist.jsx';
 import './App.css';
 import './firebase';
 import {
@@ -20,11 +26,23 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
+          
           <Route path="/" element={<StudyRoom />} />
+
+          {/* ⭐ Signup Route */}
+          <Route path="/signup" element={<Signup />} />
+
+          {/* ⭐ Login Route */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/focus-record" element={<FocusRecord />} />
+
           <Route
             path="/timer"
             element={
               <TimerPage
+                key="main-timer"
                 title="Main Timer"
                 intentStorageKey={SACRED_INTENT_STORAGE_KEY}
                 storageKey={MAIN_CHAIN_SESSION_KEY}
@@ -32,10 +50,12 @@ function App() {
               />
             }
           />
+
           <Route
             path="/auxiliary-timer"
             element={
               <TimerPage
+                key="aux-timer"
                 durationSeconds={15 * 60}
                 title="Auxiliary Timer"
                 successPrefix="Auxiliary Session"
@@ -46,8 +66,13 @@ function App() {
               />
             }
           />
+
           <Route path="/rsip" element={<RsipComingSoon />} />
           <Route path="/core-principles" element={<CorePrinciples />} />
+
+          {/* ⭐ TEMPORARY AUTH TEST PAGE */}
+          <Route path="/auth-test" element={<AuthTest />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

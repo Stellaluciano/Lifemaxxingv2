@@ -1,8 +1,16 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ReactComponent as WalkerIcon } from '../assets/person.svg';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { ReactComponent as WalkerIcon } from '../assets/walking-person.svg';
+import { ReactComponent as TrophyIcon } from '../assets/trophy-basic.svg';
 import { ReactComponent as FlagIcon } from '../assets/flag.svg';
+import mainCompletionSound from '../assets/main-timer-completion.mp3';
+import auxiliaryCompletionSound from '../assets/auxiliary-timer-completion-warning.mp3';
+import startTimerSound from '../assets/start-timer.mp3';
 import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } from '../constants';
+import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
+import CircularTimer from './CircularTimer';
 
 const formatTime = (seconds) => {
   const h = Math.floor(seconds / 3600);
@@ -56,6 +64,7 @@ const TimerPage = ({
   const [baseDuration, setBaseDuration] = useState(durationSeconds);
   const [timeLeft, setTimeLeft] = useState(durationSeconds);
   const [isActive, setIsActive] = useState(false);
+  const [targetTimestamp, setTargetTimestamp] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalSession, setModalSession] = useState(null);
   const [sessions, setSessions] = useState([]);
@@ -73,13 +82,86 @@ const TimerPage = ({
   const [graceSeconds, setGraceSeconds] = useState(null);
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+  const [confirmContinue, setConfirmContinue] = useState(false);
+  const [durationLoaded, setDurationLoaded] = useState(false);
   const auxiliaryWindowLabel = useMemo(() => describeDuration(baseDuration), [baseDuration]);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const uid = user?.uid;
+  const mainSoundRef = useRef(null);
+  const auxSoundRef = useRef(null);
+  const startSoundRef = useRef(null);
+
+  const userDurationPreferenceKey = useMemo(() => {
+    if (!durationPreferenceKey) {
+      return null;
+    }
+    if (!uid) {
+      return durationPreferenceKey;
+    }
+    return `${durationPreferenceKey}-${uid}`;
+  }, [durationPreferenceKey, uid]);
+
+  const timerDocRef = useMemo(() => {
+    if (!uid) {
+      return null;
+    }
+    return doc(db, 'users', uid, 'activeTimers', isAuxiliary ? 'aux' : 'main');
+  }, [uid, isAuxiliary]);
+
+  const clearActiveTimerDoc = useCallback(() => {
+    if (!timerDocRef) {
+      return;
+    }
+    deleteDoc(timerDocRef).catch(() => { });
+  }, [timerDocRef]);
+
+  const persistActiveTimer = useCallback(
+    (startDate, targetDate, intentSnapshot) => {
+      if (!timerDocRef) {
+        return;
+      }
+      setDoc(
+        timerDocRef,
+        {
+          startTimestamp: startDate,
+          targetTimestamp: targetDate,
+          baseDuration,
+          intentDetails: intentSnapshot ?? null,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      ).catch(() => { });
+    },
+    [timerDocRef, baseDuration]
+  );
+
 
   useEffect(() => {
+    mainSoundRef.current = new Audio(mainCompletionSound);
+    auxSoundRef.current = new Audio(auxiliaryCompletionSound);
+    startSoundRef.current = new Audio(startTimerSound);
+    return () => {
+      if (mainSoundRef.current) {
+        mainSoundRef.current.pause();
+        mainSoundRef.current = null;
+      }
+      if (auxSoundRef.current) {
+        auxSoundRef.current.pause();
+        auxSoundRef.current = null;
+      }
+      if (startSoundRef.current) {
+        startSoundRef.current.pause();
+        startSoundRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setDurationLoaded(false);
     let initialDuration = durationSeconds;
-    if (typeof window !== 'undefined' && durationPreferenceKey) {
-      const storedDuration = Number(localStorage.getItem(durationPreferenceKey));
+    if (typeof window !== 'undefined' && userDurationPreferenceKey) {
+      const storedDuration = Number(localStorage.getItem(userDurationPreferenceKey));
       if (!Number.isNaN(storedDuration) && storedDuration > 0) {
         initialDuration = storedDuration;
       }
@@ -90,30 +172,15 @@ const TimerPage = ({
     setShowModal(false);
     setModalSession(null);
     setSessionStart(null);
+    setTargetTimestamp(null);
+    setConfirmContinue(false);
     const { hours, minutes, seconds } = breakdownDuration(initialDuration);
     setCustomHours(hours.toString());
     setCustomMinutes(minutes.toString());
     setCustomSeconds(seconds.toString());
     setDurationError('');
-  }, [durationSeconds, durationPreferenceKey]);
-
-  useEffect(() => {
-    if (!storageKey || typeof window === 'undefined') {
-      setSessions([]);
-      return;
-    }
-    try {
-      const stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
-      if (Array.isArray(stored)) {
-        setSessions(stored);
-      } else {
-        setSessions([]);
-      }
-    } catch (error) {
-      console.warn('Failed to parse stored sessions', error);
-      setSessions([]);
-    }
-  }, [storageKey]);
+    setDurationLoaded(true);
+  }, [durationSeconds, userDurationPreferenceKey]);
 
   useEffect(() => {
     if (!intentStorageKey || typeof window === 'undefined') {
@@ -138,83 +205,185 @@ const TimerPage = ({
     }
   }, [intentStorageKey]);
 
-  const finalizeSession = useCallback(({ endDate = new Date(), silent = false } = {}) => {
-    const startDate = sessionStart ? new Date(sessionStart) : new Date(endDate.getTime() - baseDuration * 1000);
-    const formattedDate = startDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    const formattedStart = startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const formattedEnd = endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const activityType = intentDetails?.categoryLabel || 'Focus Session';
-    const activityDescription = intentDetails?.description || '';
+  useEffect(() => {
+    if (!uid) {
+      setSessions([]);
+      return undefined;
+    }
+    const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
+    const q = query(collection(db, 'users', uid, colName), orderBy('startTimestamp', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const total = snapshot.docs.length;
+        const mapped = snapshot.docs.map((docSnap, index) => {
+          const data = docSnap.data();
+          const startStamp = data.startTimestamp;
+          const endStamp = data.endTimestamp;
+          const startDate = startStamp?.toDate ? startStamp.toDate() : new Date(startStamp || Date.now());
+          const endDate = endStamp?.toDate ? endStamp.toDate() : new Date(endStamp || Date.now());
+          return {
+            id: docSnap.id,
+            number: total - index,
+            chainNumber: total - index,
+            date: startDate.toLocaleDateString([], { month: 'short', day: 'numeric' }),
+            startTime: startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            endTime: endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            activityType: data.activityType,
+            activityDescription: data.activityDescription,
+          };
+        });
+        setSessions(mapped);
+      },
+      (error) => {
+        console.warn('Failed to subscribe to sessions', error);
+        setSessions([]);
+      }
+    );
+    return () => unsubscribe();
+  }, [uid, isAuxiliary]);
 
-    setSessions((prev) => {
-      const updatedSessions = [
-        ...prev,
-        {
-          number: prev.length + 1,
-          chainNumber: prev.length + 1,
-          date: formattedDate,
-          startTime: formattedStart,
-          endTime: formattedEnd,
-          activityType,
-          activityDescription,
-        },
-      ];
+  const finalizeSession = useCallback(
+    async ({ endDate = new Date(), silent = false, startOverride = null } = {}) => {
+      if (!uid) {
+        return;
+      }
+      const startDate = startOverride
+        ? new Date(startOverride)
+        : sessionStart
+          ? new Date(sessionStart)
+          : new Date(endDate.getTime() - baseDuration * 1000);
+      const activityType = intentDetails?.categoryLabel || 'Focus Session';
+      const activityDescription = intentDetails?.description || '';
+      const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
 
-      if (storageKey && typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
-        } catch (error) {
-          console.warn('Failed to persist sessions', error);
+      try {
+        await addDoc(collection(db, 'users', uid, colName), {
+          startTimestamp: startDate,
+          endTimestamp: endDate,
+          ...(isAuxiliary
+            ? {}
+            : {
+              activityType,
+              activityDescription,
+            }),
+        });
+        if (!silent && !isAuxiliary) {
+          const nextNumber = sessions.length > 0 ? sessions[0].number + 1 : 1;
+          setModalSession(nextNumber);
         }
+        clearActiveTimerDoc();
+      } catch (error) {
+        console.warn('Failed to persist session', error);
       }
-
-      if (!silent && !isAuxiliary) {
-        setModalSession(updatedSessions.length);
-      }
-
-      return updatedSessions;
-    });
-  }, [sessionStart, baseDuration, intentDetails, storageKey, isAuxiliary]);
+    },
+    [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions, clearActiveTimerDoc]
+  );
 
   useEffect(() => {
-    if (!isActive) {
+    if (!timerDocRef || !durationLoaded) {
+      return undefined;
+    }
+    const unsubscribe = onSnapshot(
+      timerDocRef,
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          return;
+        }
+        const data = snapshot.data();
+        const targetDate = data.targetTimestamp?.toDate
+          ? data.targetTimestamp.toDate()
+          : data.targetTimestamp
+            ? new Date(data.targetTimestamp)
+            : null;
+        if (!targetDate) {
+          return;
+        }
+        const startDate = data.startTimestamp?.toDate
+          ? data.startTimestamp.toDate()
+          : data.startTimestamp
+            ? new Date(data.startTimestamp)
+            : new Date();
+        const remainingMs = targetDate.getTime() - Date.now();
+        if (remainingMs <= 0) {
+          finalizeSession({ endDate: targetDate, silent: isAuxiliary, startOverride: startDate });
+          clearActiveTimerDoc();
+          return;
+        }
+        if (!isActive) {
+          setBaseDuration(data.baseDuration || baseDuration);
+          setSessionStart(startDate);
+          setTargetTimestamp(targetDate.getTime());
+          setTimeLeft(Math.ceil(remainingMs / 1000));
+          setIsActive(true);
+          setGraceSeconds(null);
+          setShowModal(false);
+          setShowFocusFailPrompt(false);
+          if (data.intentDetails) {
+            setIntentDetails(data.intentDetails);
+          }
+        }
+      },
+      () => { }
+    );
+    return () => unsubscribe();
+  }, [timerDocRef, isActive, baseDuration, clearActiveTimerDoc, finalizeSession, isAuxiliary, durationLoaded]);
+
+  const clearSessions = useCallback(async () => {
+    if (!uid) {
+      setSessions([]);
+      return;
+    }
+    const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
+    try {
+      const colRef = collection(db, 'users', uid, colName);
+      const snap = await getDocs(colRef);
+      await Promise.all(snap.docs.map((docSnap) => deleteDoc(doc(db, 'users', uid, colName, docSnap.id))));
+    } catch (error) {
+      console.warn('Failed to clear sessions', error);
+    }
+  }, [uid, isAuxiliary]);
+
+  useEffect(() => {
+    if (!isActive || !targetTimestamp) {
       return undefined;
     }
 
-    if (timeLeft === 0) {
-      setIsActive(false);
-      finalizeSession({ silent: isAuxiliary });
-      if (isAuxiliary) {
-        setGraceSeconds(5);
-        setShowModal(false);
-      } else {
-        setShowModal(true);
+    const tick = () => {
+      const remainingMs = Math.max(0, targetTimestamp - Date.now());
+      const nextSeconds = Math.ceil(remainingMs / 1000);
+      setTimeLeft(nextSeconds);
+      if (remainingMs <= 0) {
+        setIsActive(false);
+        setTargetTimestamp(null);
+        finalizeSession({ silent: isAuxiliary });
+        clearActiveTimerDoc();
+        if (isAuxiliary) {
+          auxSoundRef.current?.play().catch(() => { });
+          setGraceSeconds(5);
+          setShowModal(false);
+        } else {
+          mainSoundRef.current?.play().catch(() => { });
+          setShowModal(true);
+        }
+        setSessionStart(null);
+        setShowFocusFailPrompt(false);
       }
-      setSessionStart(null);
-      setShowFocusFailPrompt(false);
-      return undefined;
-    }
+    };
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : prev));
-    }, 1000);
-
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [isActive, timeLeft, finalizeSession, isAuxiliary]);
+  }, [isActive, targetTimestamp, finalizeSession, isAuxiliary, clearActiveTimerDoc]);
 
-  const handleGraceExpired = useCallback(() => {
+  const handleGraceExpired = useCallback(async () => {
     setGraceSeconds(null);
     setTimeLeft(baseDuration);
     setShowModal(false);
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
-    setSessions([]);
-  }, [baseDuration, storageKey]);
+    setTargetTimestamp(null);
+    clearActiveTimerDoc();
+    await clearSessions();
+  }, [baseDuration, clearSessions, clearActiveTimerDoc]);
 
   useEffect(() => {
     if (!isAuxiliary || graceSeconds === null) {
@@ -240,10 +409,15 @@ const TimerPage = ({
   }, [baseDuration, timeLeft]);
 
   const beginSession = useCallback(() => {
-    setSessionStart(new Date());
+    const startDate = new Date();
+    setSessionStart(startDate);
+    const targetMs = startDate.getTime() + baseDuration * 1000;
+    setTargetTimestamp(targetMs);
     setIsActive(true);
     setGraceSeconds(null);
-  }, []);
+    startSoundRef.current?.play().catch(() => { });
+    persistActiveTimer(startDate, new Date(targetMs), intentDetails);
+  }, [baseDuration, persistActiveTimer, intentDetails]);
 
   const handleStart = () => {
     if (timeLeft > 0 && !isActive) {
@@ -260,15 +434,25 @@ const TimerPage = ({
     setTimeLeft(baseDuration);
     beginSession();
     setShowModal(false);
+    setConfirmContinue(false);
   };
 
   const handleReturnToStudyRoom = () => {
     setShowModal(false);
     navigate('/');
+    setConfirmContinue(false);
+  };
+
+  const handleContinueInitiate = () => {
+    setConfirmContinue(true);
+  };
+
+  const handleContinueConfirm = () => {
+    handleModalRestart();
   };
 
   useEffect(() => {
-    if (isAuxiliary || typeof window === 'undefined') {
+    if (isAuxiliary || typeof window === 'undefined' || !durationLoaded) {
       return;
     }
     const autoStart = localStorage.getItem(AUTO_START_MAIN_KEY);
@@ -276,7 +460,7 @@ const TimerPage = ({
       localStorage.removeItem(AUTO_START_MAIN_KEY);
       beginSession();
     }
-  }, [isAuxiliary, isActive, timeLeft, beginSession]);
+  }, [isAuxiliary, isActive, timeLeft, beginSession, durationLoaded]);
 
   const handleImmediateStart = useCallback(() => {
     if (isActive) {
@@ -285,8 +469,12 @@ const TimerPage = ({
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setShowFocusFailPrompt(false);
     setGraceSeconds(null);
+    clearActiveTimerDoc();
+    auxSoundRef.current?.pause();
+    auxSoundRef.current && (auxSoundRef.current.currentTime = 0);
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(AUTO_START_MAIN_KEY, '1');
@@ -295,28 +483,23 @@ const TimerPage = ({
       }
     }
     navigate('/timer');
-  }, [isActive, finalizeSession, baseDuration, navigate]);
+  }, [isActive, finalizeSession, baseDuration, navigate, clearActiveTimerDoc]);
 
   const handleCancelReservation = () => {
     setShowCancelPrompt(true);
   };
 
-  const handleCancelReservationConfirm = () => {
+  const handleCancelReservationConfirm = async () => {
     setShowCancelPrompt(false);
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setGraceSeconds(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
-    setSessions([]);
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
+    clearActiveTimerDoc();
+    await clearSessions();
   };
 
   const handleCancelReservationClose = () => {
@@ -334,20 +517,15 @@ const TimerPage = ({
     setShowFocusFailPrompt(false);
   };
 
-  const handleFocusFailConfirm = () => {
-    if (storageKey && typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem(storageKey);
-      } catch (error) {
-        console.warn('Failed to clear sessions', error);
-      }
-    }
-    setSessions([]);
+  const handleFocusFailConfirm = async () => {
+    await clearSessions();
     setIsActive(false);
     setTimeLeft(baseDuration);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setShowModal(false);
     setShowFocusFailPrompt(false);
+    clearActiveTimerDoc();
   };
 
   const requiresCustomCategory = selectedCategory === 'custom';
@@ -366,8 +544,10 @@ const TimerPage = ({
     if (!sessions?.length) {
       return [];
     }
-    return [...sessions].reverse();
+    return sessions;
   }, [sessions]);
+
+  const trophyCount = useMemo(() => (isAuxiliary ? 0 : sessions.length), [isAuxiliary, sessions]);
 
   const openIntentModal = () => {
     if (intentDetails) {
@@ -409,13 +589,16 @@ const TimerPage = ({
         console.warn('Failed to persist session intent', error);
       }
     }
+    setTimeLeft(baseDuration);
     beginSession();
     setIsIntentModalOpen(false);
   };
 
 
   const openDurationModal = () => {
-    setShowDurationModal(true);
+    if (!isActive) {
+      setShowDurationModal(true);
+    }
   };
 
   const closeDurationModal = () => {
@@ -453,12 +636,14 @@ const TimerPage = ({
     setIsActive(false);
     setShowModal(false);
     setSessionStart(null);
+    setTargetTimestamp(null);
     setDurationError('');
     setShowDurationModal(false);
+    clearActiveTimerDoc();
 
-    if (typeof window !== 'undefined' && durationPreferenceKey) {
+    if (typeof window !== 'undefined' && userDurationPreferenceKey) {
       try {
-        localStorage.setItem(durationPreferenceKey, String(newDuration));
+        localStorage.setItem(userDurationPreferenceKey, String(newDuration));
       } catch (error) {
         console.warn('Failed to persist custom duration', error);
       }
@@ -468,6 +653,17 @@ const TimerPage = ({
   const activeTitle = isActive && intentDetails?.categoryLabel ? intentDetails.categoryLabel : null;
   const activeSubtitle = isActive && intentDetails?.description ? intentDetails.description : null;
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isActive) {
+      document.body.classList.add('timer-active');
+    } else {
+      document.body.classList.remove('timer-active');
+    }
+    return () => {
+      document.body.classList.remove('timer-active');
+    };
+  }, [isActive]);
+
   return (
     <div className={`timer-page${isActive ? ' timer-page--active' : ''}`}>
       <h1 className={`timer-page__title${activeTitle ? ' timer-page__title--active' : ''}`}>
@@ -475,37 +671,58 @@ const TimerPage = ({
       </h1>
       {activeSubtitle && <p className="timer-page__subtitle">{activeSubtitle}</p>}
       <div className="timer-display-wrapper">
-        <div className="timer-display">{formatTime(timeLeft)}</div>
-        <button
-          type="button"
-          className="timer-display__action"
-          onClick={openDurationModal}
-        >
-          Adjust Timer
-        </button>
+        {!isAuxiliary && <div className="timer-display">{formatTime(timeLeft)}</div>}
+        {!isActive && !isAuxiliary && (
+          <button
+            type="button"
+            className="timer-display__action"
+            onClick={openDurationModal}
+          >
+            Adjust Timer
+          </button>
+        )}
       </div>
 
-      <div className="timer-progress">
-        <div className="timer-progress__track">
-          <span
-            className="timer-progress__figure"
-            style={{ left: `${progressPercent}%` }}
-            role="img"
-            aria-label="Focus traveler"
-          >
-            <WalkerIcon />
-          </span>
-          <span className="timer-progress__flag" role="img" aria-label="Goal flag">
-            <FlagIcon />
-          </span>
-          <div className="timer-progress__line" />
+      {isAuxiliary ? (
+        <>
+          <CircularTimer timeLeft={timeLeft} duration={baseDuration} title={activeTitle || title} />
+          {!isActive && (
+            <button
+              type="button"
+              className="timer-display__action"
+              onClick={openDurationModal}
+              style={{ marginTop: '1rem' }}
+            >
+              Adjust Timer
+            </button>
+          )}
+        </>
+      ) : (
+        <div className="timer-progress">
+          <div className="timer-progress__track">
+            <span
+              className="timer-progress__figure"
+              style={{ left: `${progressPercent}%` }}
+              role="img"
+              aria-label="Focus traveler"
+            >
+              <WalkerIcon />
+            </span>
+            <span className="timer-progress__flag" role="img" aria-label="Goal flag">
+              <FlagIcon />
+            </span>
+            <div className="timer-progress__line" />
+          </div>
         </div>
-      </div>
+      )}
       {!isActive && (
         <div className="controls controls--timer controls--primary">
           <button type="button" onClick={handleStart} disabled={timeLeft === 0}>
             Start
           </button>
+          <NavLink to="/focus-record" className="controls__link-button">
+            Focus Record
+          </NavLink>
         </div>
       )}
       {isIntentModalOpen && (
@@ -580,37 +797,41 @@ const TimerPage = ({
           </div>
         </div>
       )}
-      {storageKey && (
+      {storageKey && isAuxiliary && (
         <div className="timer-log">
-          <h2 className="timer-log__title">{isAuxiliary ? 'Reservation Record' : 'Focus Record'}</h2>
+          <h2 className="timer-log__title">Reservation Record</h2>
           {logEntries.length === 0 ? (
-            <p className="timer-log__empty">No sessions recorded yet. Stay focused to create your streak.</p>
+            <p className="timer-log__empty">No reservations recorded yet.</p>
           ) : (
             <div className="timer-log__entries">
               {logEntries.map((session) => (
                 <div className="timer-log__entry" key={`${session.number}-${session.date}-${session.startTime}`}>
                   <div className="timer-log__meta">
-                    {!isAuxiliary && (
-                      <span className="timer-log__number">{session.number}</span>
-                    )}
-                    {!isAuxiliary && <span className="timer-log__date">{session.date}</span>}
+                    <span className="timer-log__activity">Successful Reservation #{session.chainNumber || session.number}</span>
                   </div>
-                  <div className={`timer-log__details${isAuxiliary ? ' timer-log__details--full' : ''}`}>
-                    {!isAuxiliary && (
-                      <>
-                        <div className="timer-log__activity">{session.activityType || 'Focus Session'}</div>
-                        {session.activityDescription && (
-                          <p className="timer-log__description">{session.activityDescription}</p>
-                        )}
-                      </>
-                    )}
-                    {isAuxiliary && (
-                      <div className="timer-log__activity">Successful Reservation #{session.chainNumber || session.number}</div>
-                    )}
+                  <div className="timer-log__details timer-log__details--full">
+                    <div className="timer-log__time">
+                      {session.startTime} - {session.endTime}
+                    </div>
                   </div>
-                  <div className="timer-log__time">
-                    {session.startTime} - {session.endTime}
-                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isAuxiliary && (
+        <div className="timer-trophies">
+          <h2 className="timer-trophies__title">Trophy Cabinet</h2>
+          {trophyCount === 0 ? (
+            <p className="timer-trophies__empty">Complete a focus session to earn your first trophy.</p>
+          ) : (
+            <div className="timer-trophies__grid">
+              {Array.from({ length: trophyCount }).map((_, index) => (
+                <div className="timer-trophies__item" key={`trophy-${index + 1}`}>
+                  <TrophyIcon />
+                  <span>#{index + 1}</span>
                 </div>
               ))}
             </div>
@@ -735,20 +956,44 @@ const TimerPage = ({
               You crushed that focus block. Ready to keep the momentum going?
             </p>
             <div className="timer-modal__actions">
-              <button
-                type="button"
-                className="timer-modal__primary"
-                onClick={handleModalRestart}
-              >
-                Continue Same Task
-              </button>
-              <button
-                type="button"
-                className="timer-modal__secondary"
-                onClick={handleReturnToStudyRoom}
-              >
-                Return to Study Room
-              </button>
+              {!confirmContinue ? (
+                <>
+                  <button
+                    type="button"
+                    className="timer-modal__primary"
+                    onClick={handleContinueInitiate}
+                  >
+                    Continue Same Task
+                  </button>
+                  <button
+                    type="button"
+                    className="timer-modal__secondary"
+                    onClick={handleReturnToStudyRoom}
+                  >
+                    Return to Study Room
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="timer-modal__warning">
+                    <strong>Warning:</strong> Sacred Seat protocol will restart. If you lose focus this streak will reset.
+                  </div>
+                  <button
+                    type="button"
+                    className="timer-modal__primary timer-modal__primary--success"
+                    onClick={handleContinueConfirm}
+                  >
+                    Yes, continue this task
+                  </button>
+                  <button
+                    type="button"
+                    className="timer-modal__secondary"
+                    onClick={handleReturnToStudyRoom}
+                  >
+                    Return to Study Room
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -756,7 +1001,7 @@ const TimerPage = ({
       {isAuxiliary && graceSeconds !== null && (
         <div className="timer-modal__overlay" role="dialog" aria-modal="true">
           <div className="timer-modal timer-modal--warning">
-            <h2 className="timer-modal__title">Auxiliary Session Complete</h2>
+            <h2 className="timer-modal__title">Time to LOCK IN</h2>
             <p className="timer-modal__subtitle">
               Start your main task now. Records reset in {graceSeconds}s if you don't continue.
             </p>
