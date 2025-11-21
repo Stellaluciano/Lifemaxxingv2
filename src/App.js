@@ -9,6 +9,7 @@ import AuthTest from './pages/AuthTest';
 import Signup from './pages/Signup.jsx';
 import Login from './pages/Login.jsx';
 import Profile from './pages/Profile.jsx';
+import FocusRecord from './pages/FocusRecord.jsx';
 import Wishlist from './pages/Wishlist.jsx';
 import './App.css';
 import './firebase';
@@ -35,11 +36,13 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/focus-record" element={<FocusRecord />} />
 
           <Route
             path="/timer"
             element={
               <TimerPage
+                key="main-timer"
                 title="Main Timer"
                 intentStorageKey={SACRED_INTENT_STORAGE_KEY}
                 storageKey={MAIN_CHAIN_SESSION_KEY}
@@ -52,6 +55,7 @@ function App() {
             path="/auxiliary-timer"
             element={
               <TimerPage
+                key="aux-timer"
                 durationSeconds={15 * 60}
                 title="Auxiliary Timer"
                 successPrefix="Auxiliary Session"

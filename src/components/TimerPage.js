@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ReactComponent as WalkerIcon } from '../assets/person.svg';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { ReactComponent as WalkerIcon } from '../assets/walking-person.svg';
+import { ReactComponent as TrophyIcon } from '../assets/trophy-basic.svg';
 import { ReactComponent as FlagIcon } from '../assets/flag.svg';
 import mainCompletionSound from '../assets/main-timer-completion.mp3';
 import auxiliaryCompletionSound from '../assets/auxiliary-timer-completion-warning.mp3';
@@ -81,6 +82,7 @@ const TimerPage = ({
   const [showCancelPrompt, setShowCancelPrompt] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
   const [confirmContinue, setConfirmContinue] = useState(false);
+  const [durationLoaded, setDurationLoaded] = useState(false);
   const auxiliaryWindowLabel = useMemo(() => describeDuration(baseDuration), [baseDuration]);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -155,6 +157,7 @@ const TimerPage = ({
   }, []);
 
   useEffect(() => {
+    setDurationLoaded(false);
     let initialDuration = durationSeconds;
     if (typeof window !== 'undefined' && userDurationPreferenceKey) {
       const storedDuration = Number(localStorage.getItem(userDurationPreferenceKey));
@@ -175,6 +178,7 @@ const TimerPage = ({
     setCustomMinutes(minutes.toString());
     setCustomSeconds(seconds.toString());
     setDurationError('');
+    setDurationLoaded(true);
   }, [durationSeconds, userDurationPreferenceKey]);
 
   useEffect(() => {
@@ -276,7 +280,7 @@ const TimerPage = ({
 );
 
   useEffect(() => {
-    if (!timerDocRef) {
+    if (!timerDocRef || !durationLoaded) {
       return undefined;
     }
     const unsubscribe = onSnapshot(
@@ -322,7 +326,7 @@ const TimerPage = ({
       () => {}
     );
     return () => unsubscribe();
-  }, [timerDocRef, isActive, baseDuration, clearActiveTimerDoc, finalizeSession, isAuxiliary]);
+  }, [timerDocRef, isActive, baseDuration, clearActiveTimerDoc, finalizeSession, isAuxiliary, durationLoaded]);
 
   const clearSessions = useCallback(async () => {
     if (!uid) {
@@ -447,7 +451,7 @@ const TimerPage = ({
   };
 
   useEffect(() => {
-    if (isAuxiliary || typeof window === 'undefined') {
+    if (isAuxiliary || typeof window === 'undefined' || !durationLoaded) {
       return;
     }
     const autoStart = localStorage.getItem(AUTO_START_MAIN_KEY);
@@ -455,7 +459,7 @@ const TimerPage = ({
       localStorage.removeItem(AUTO_START_MAIN_KEY);
       beginSession();
     }
-  }, [isAuxiliary, isActive, timeLeft, beginSession]);
+  }, [isAuxiliary, isActive, timeLeft, beginSession, durationLoaded]);
 
   const handleImmediateStart = useCallback(() => {
     if (isActive) {
@@ -541,6 +545,8 @@ const TimerPage = ({
     }
     return sessions;
   }, [sessions]);
+
+  const trophyCount = useMemo(() => (isAuxiliary ? 0 : sessions.length), [isAuxiliary, sessions]);
 
   const openIntentModal = () => {
     if (intentDetails) {
@@ -646,6 +652,17 @@ const TimerPage = ({
   const activeTitle = isActive && intentDetails?.categoryLabel ? intentDetails.categoryLabel : null;
   const activeSubtitle = isActive && intentDetails?.description ? intentDetails.description : null;
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isActive) {
+      document.body.classList.add('timer-active');
+    } else {
+      document.body.classList.remove('timer-active');
+    }
+    return () => {
+      document.body.classList.remove('timer-active');
+    };
+  }, [isActive]);
+
   return (
     <div className={`timer-page${isActive ? ' timer-page--active' : ''}`}>
       <h1 className={`timer-page__title${activeTitle ? ' timer-page__title--active' : ''}`}>
@@ -686,6 +703,9 @@ const TimerPage = ({
           <button type="button" onClick={handleStart} disabled={timeLeft === 0}>
             Start
           </button>
+          <NavLink to="/focus-record" className="controls__link-button">
+            Focus Record
+          </NavLink>
         </div>
       )}
       {isIntentModalOpen && (
@@ -760,37 +780,41 @@ const TimerPage = ({
           </div>
         </div>
       )}
-      {storageKey && (
+      {storageKey && isAuxiliary && (
         <div className="timer-log">
-          <h2 className="timer-log__title">{isAuxiliary ? 'Reservation Record' : 'Focus Record'}</h2>
+          <h2 className="timer-log__title">Reservation Record</h2>
           {logEntries.length === 0 ? (
-            <p className="timer-log__empty">No sessions recorded yet. Stay focused to create your streak.</p>
+            <p className="timer-log__empty">No reservations recorded yet.</p>
           ) : (
             <div className="timer-log__entries">
               {logEntries.map((session) => (
                 <div className="timer-log__entry" key={`${session.number}-${session.date}-${session.startTime}`}>
                   <div className="timer-log__meta">
-                    {!isAuxiliary && (
-                      <span className="timer-log__number">{session.number}</span>
-                    )}
-                    {!isAuxiliary && <span className="timer-log__date">{session.date}</span>}
+                    <span className="timer-log__activity">Successful Reservation #{session.chainNumber || session.number}</span>
                   </div>
-                  <div className={`timer-log__details${isAuxiliary ? ' timer-log__details--full' : ''}`}>
-                    {!isAuxiliary && (
-                      <>
-                        <div className="timer-log__activity">{session.activityType || 'Focus Session'}</div>
-                        {session.activityDescription && (
-                          <p className="timer-log__description">{session.activityDescription}</p>
-                        )}
-                      </>
-                    )}
-                    {isAuxiliary && (
-                      <div className="timer-log__activity">Successful Reservation #{session.chainNumber || session.number}</div>
-                    )}
+                  <div className="timer-log__details timer-log__details--full">
+                    <div className="timer-log__time">
+                      {session.startTime} - {session.endTime}
+                    </div>
                   </div>
-                  <div className="timer-log__time">
-                    {session.startTime} - {session.endTime}
-                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isAuxiliary && (
+        <div className="timer-trophies">
+          <h2 className="timer-trophies__title">Trophy Cabinet</h2>
+          {trophyCount === 0 ? (
+            <p className="timer-trophies__empty">Complete a focus session to earn your first trophy.</p>
+          ) : (
+            <div className="timer-trophies__grid">
+              {Array.from({ length: trophyCount }).map((_, index) => (
+                <div className="timer-trophies__item" key={`trophy-${index + 1}`}>
+                  <TrophyIcon />
+                  <span>#{index + 1}</span>
                 </div>
               ))}
             </div>

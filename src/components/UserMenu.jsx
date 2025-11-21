@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { ReactComponent as UserIcon } from '../assets/user-icon.svg';
 
 const UserMenu = () => {
   const { user } = useAuth();
@@ -47,14 +48,15 @@ const UserMenu = () => {
   }
 
   const fallbackBase = user.displayName || user.email.split('@')[0];
-  const baseName = (profile?.firstName ?? '').trim() || fallbackBase;
-  const firstToken = baseName.trim().split(' ')[0];
-  const greeting = `Hi, ${firstToken}!`;
+  const firstName = (profile?.firstName ?? '').trim();
+  const lastName = (profile?.lastName ?? '').trim();
+  const displayName = [firstName, lastName].filter(Boolean).join(' ') || fallbackBase;
 
   return (
     <div className="top-nav__user-menu" ref={menuRef}>
       <button type="button" className="top-nav__profile" onClick={() => setOpen((prev) => !prev)}>
-        <span>{greeting}</span>
+        <UserIcon className="top-nav__profile-icon" aria-hidden="true" />
+        <span>{displayName}</span>
       </button>
       {open && (
         <div className="top-nav__dropdown">
