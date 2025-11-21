@@ -1,0 +1,50 @@
+.circular-timer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.circular-timer__container {
+  position: relative;
+  width: 360px;
+  height: 360px;
+}
+
+.circular-timer__svg {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.circular-timer__background {
+  fill: transparent;
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.circular-timer__progress {
+  fill: transparent;
+  stroke: var(--accent-color, #4a90e2);
+  /* Use CSS variable or fallback */
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.circular-timer__content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-timer__time {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: #ff9f43;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}

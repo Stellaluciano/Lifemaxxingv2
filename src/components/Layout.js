@@ -34,8 +34,14 @@ const Layout = () => {
             <NavLink
               to="/"
               end={false}
-              className={({ isActive }) =>
-                `top-nav__tab${isActive && !isRsip ? ' top-nav__tab--active' : ''}`
+              className={() =>
+                `top-nav__tab${
+                  ['/', '/timer', '/auxiliary-timer', '/core-principles'].includes(
+                    location.pathname
+                  )
+                    ? ' top-nav__tab--active'
+                    : ''
+                }`
               }
             >
               CTDP

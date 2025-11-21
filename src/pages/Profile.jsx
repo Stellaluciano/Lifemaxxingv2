@@ -157,7 +157,7 @@ const Profile = () => {
           key: `month-${firstDayOfMonth.key}`,
         };
       }),
-    [orderedWeeks]
+    [orderedWeeks, heatmapYear]
   );
 
   const handleSave = async (event) => {

@@ -10,6 +10,7 @@ import { AUTO_START_MAIN_KEY, DEFAULT_TASK_CATEGORY, TASK_CATEGORY_OPTIONS } fro
 import { collection, addDoc, onSnapshot, query, orderBy, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import CircularTimer from './CircularTimer';
 
 const formatTime = (seconds) => {
   const h = Math.floor(seconds / 3600);
@@ -112,7 +113,7 @@ const TimerPage = ({
     if (!timerDocRef) {
       return;
     }
-    deleteDoc(timerDocRef).catch(() => {});
+    deleteDoc(timerDocRef).catch(() => { });
   }, [timerDocRef]);
 
   const persistActiveTimer = useCallback(
@@ -130,7 +131,7 @@ const TimerPage = ({
           updatedAt: new Date(),
         },
         { merge: true }
-      ).catch(() => {});
+      ).catch(() => { });
     },
     [timerDocRef, baseDuration]
   );
@@ -250,8 +251,8 @@ const TimerPage = ({
       const startDate = startOverride
         ? new Date(startOverride)
         : sessionStart
-        ? new Date(sessionStart)
-        : new Date(endDate.getTime() - baseDuration * 1000);
+          ? new Date(sessionStart)
+          : new Date(endDate.getTime() - baseDuration * 1000);
       const activityType = intentDetails?.categoryLabel || 'Focus Session';
       const activityDescription = intentDetails?.description || '';
       const colName = isAuxiliary ? 'auxSessions' : 'mainSessions';
@@ -263,9 +264,9 @@ const TimerPage = ({
           ...(isAuxiliary
             ? {}
             : {
-                activityType,
-                activityDescription,
-              }),
+              activityType,
+              activityDescription,
+            }),
         });
         if (!silent && !isAuxiliary) {
           const nextNumber = sessions.length > 0 ? sessions[0].number + 1 : 1;
@@ -273,11 +274,11 @@ const TimerPage = ({
         }
         clearActiveTimerDoc();
       } catch (error) {
-      console.warn('Failed to persist session', error);
-    }
-  },
-  [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions, clearActiveTimerDoc]
-);
+        console.warn('Failed to persist session', error);
+      }
+    },
+    [uid, sessionStart, baseDuration, intentDetails, isAuxiliary, sessions, clearActiveTimerDoc]
+  );
 
   useEffect(() => {
     if (!timerDocRef || !durationLoaded) {
@@ -293,16 +294,16 @@ const TimerPage = ({
         const targetDate = data.targetTimestamp?.toDate
           ? data.targetTimestamp.toDate()
           : data.targetTimestamp
-          ? new Date(data.targetTimestamp)
-          : null;
+            ? new Date(data.targetTimestamp)
+            : null;
         if (!targetDate) {
           return;
         }
         const startDate = data.startTimestamp?.toDate
           ? data.startTimestamp.toDate()
           : data.startTimestamp
-          ? new Date(data.startTimestamp)
-          : new Date();
+            ? new Date(data.startTimestamp)
+            : new Date();
         const remainingMs = targetDate.getTime() - Date.now();
         if (remainingMs <= 0) {
           finalizeSession({ endDate: targetDate, silent: isAuxiliary, startOverride: startDate });
@@ -323,7 +324,7 @@ const TimerPage = ({
           }
         }
       },
-      () => {}
+      () => { }
     );
     return () => unsubscribe();
   }, [timerDocRef, isActive, baseDuration, clearActiveTimerDoc, finalizeSession, isAuxiliary, durationLoaded]);
@@ -358,11 +359,11 @@ const TimerPage = ({
         finalizeSession({ silent: isAuxiliary });
         clearActiveTimerDoc();
         if (isAuxiliary) {
-          auxSoundRef.current?.play().catch(() => {});
+          auxSoundRef.current?.play().catch(() => { });
           setGraceSeconds(5);
           setShowModal(false);
         } else {
-          mainSoundRef.current?.play().catch(() => {});
+          mainSoundRef.current?.play().catch(() => { });
           setShowModal(true);
         }
         setSessionStart(null);
@@ -414,7 +415,7 @@ const TimerPage = ({
     setTargetTimestamp(targetMs);
     setIsActive(true);
     setGraceSeconds(null);
-    startSoundRef.current?.play().catch(() => {});
+    startSoundRef.current?.play().catch(() => { });
     persistActiveTimer(startDate, new Date(targetMs), intentDetails);
   }, [baseDuration, persistActiveTimer, intentDetails]);
 
@@ -670,8 +671,8 @@ const TimerPage = ({
       </h1>
       {activeSubtitle && <p className="timer-page__subtitle">{activeSubtitle}</p>}
       <div className="timer-display-wrapper">
-        <div className="timer-display">{formatTime(timeLeft)}</div>
-        {!isActive && (
+        {!isAuxiliary && <div className="timer-display">{formatTime(timeLeft)}</div>}
+        {!isActive && !isAuxiliary && (
           <button
             type="button"
             className="timer-display__action"
@@ -682,22 +683,38 @@ const TimerPage = ({
         )}
       </div>
 
-      <div className="timer-progress">
-        <div className="timer-progress__track">
-          <span
-            className="timer-progress__figure"
-            style={{ left: `${progressPercent}%` }}
-            role="img"
-            aria-label="Focus traveler"
-          >
-            <WalkerIcon />
-          </span>
-          <span className="timer-progress__flag" role="img" aria-label="Goal flag">
-            <FlagIcon />
-          </span>
-          <div className="timer-progress__line" />
+      {isAuxiliary ? (
+        <>
+          <CircularTimer timeLeft={timeLeft} duration={baseDuration} title={activeTitle || title} />
+          {!isActive && (
+            <button
+              type="button"
+              className="timer-display__action"
+              onClick={openDurationModal}
+              style={{ marginTop: '1rem' }}
+            >
+              Adjust Timer
+            </button>
+          )}
+        </>
+      ) : (
+        <div className="timer-progress">
+          <div className="timer-progress__track">
+            <span
+              className="timer-progress__figure"
+              style={{ left: `${progressPercent}%` }}
+              role="img"
+              aria-label="Focus traveler"
+            >
+              <WalkerIcon />
+            </span>
+            <span className="timer-progress__flag" role="img" aria-label="Goal flag">
+              <FlagIcon />
+            </span>
+            <div className="timer-progress__line" />
+          </div>
         </div>
-      </div>
+      )}
       {!isActive && (
         <div className="controls controls--timer controls--primary">
           <button type="button" onClick={handleStart} disabled={timeLeft === 0}>
