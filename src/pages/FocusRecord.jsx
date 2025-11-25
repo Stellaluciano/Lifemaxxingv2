@@ -26,12 +26,20 @@ const FocusRecord = () => {
           const endStamp = data.endTimestamp;
           const startDate = startStamp?.toDate ? startStamp.toDate() : new Date(startStamp || Date.now());
           const endDate = endStamp?.toDate ? endStamp.toDate() : new Date(endStamp || Date.now());
+
+          // Explicitly format date parts to avoid timezone shifts if any
+          const dateString = startDate.toLocaleDateString([], {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          });
+
           return {
             id: docSnap.id,
             number: snapshot.docs.length - index,
             activityType: data.activityType || '—',
             activityDescription: data.activityDescription || '—',
-            date: startDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }),
+            date: dateString,
             range: `${startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
           };
         });

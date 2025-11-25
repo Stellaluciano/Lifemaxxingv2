@@ -2135,3 +2135,109 @@ body.timer-active .sidebar__button--active {
   box-shadow: 0 20px 40px -30px rgba(31, 35, 51, 0.35);
   border: 1px solid rgba(57, 90, 255, 0.08);
 }
+
+/* Timer Page Edit Intent Styles */
+.timer-page__header-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.timer-page__edit-btn {
+  background: transparent;
+  border: none;
+  color: rgba(246, 173, 59, 0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-page__edit-btn:hover {
+  color: #f6ad3b;
+  background: rgba(246, 173, 59, 0.1);
+}
+
+.timer-page__edit-intent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+}
+
+.timer-page__edit-input {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(246, 173, 59, 0.3);
+  background: rgba(0, 0, 0, 0.2);
+  color: #f6ad3b;
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.timer-page__edit-input:focus {
+  outline: none;
+  border-color: #f6ad3b;
+  box-shadow: 0 0 0 2px rgba(246, 173, 59, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.timer-page__edit-input--title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timer-page__edit-input--subtitle {
+  font-size: 1rem;
+  color: rgba(246, 173, 59, 0.8);
+}
+
+.timer-page__edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.timer-page__edit-save,
+.timer-page__edit-cancel {
+  padding: 0.4rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.timer-page__edit-save {
+  background: rgba(246, 173, 59, 0.2);
+  color: #f6ad3b;
+  border-color: rgba(246, 173, 59, 0.3);
+}
+
+.timer-page__edit-save:hover {
+  background: rgba(246, 173, 59, 0.3);
+}
+
+.timer-page__edit-cancel {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.timer-page__edit-cancel:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.05);
+}

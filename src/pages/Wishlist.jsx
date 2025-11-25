@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
+import './Wishlist.css';
 
 const DEFAULT_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 
@@ -35,13 +36,14 @@ const formatDateKey = (date, timeZone) => {
 
 const formatDisplayDate = (key, timeZone) => {
   const [year, month, day] = key.split('-').map(Number);
-  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  // Create a date object treating the input as local time components
+  // This avoids UTC conversion issues that cause off-by-one errors
+  const date = new Date(year, month - 1, day);
   return new Intl.DateTimeFormat([], {
-    timeZone: timeZone || 'UTC',
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }).format(utcDate);
+  }).format(date);
 };
 
 const createId = () =>
@@ -207,13 +209,17 @@ const Wishlist = () => {
             const dateValue = data.date || docSnap.id;
             const taskList = Array.isArray(data.tasks) ? data.tasks : [];
             const hasTasks = taskList.length > 0;
+            const completedCount = taskList.filter((task) => task.completed).length;
+            const totalCount = taskList.length;
             const percent = hasTasks
-              ? Math.round((taskList.filter((task) => task.completed).length / taskList.length) * 100)
+              ? Math.round((completedCount / totalCount) * 100)
               : 0;
             return {
               id: docSnap.id,
               date: dateValue,
               percent,
+              completedCount,
+              totalCount,
               hasTasks,
               timeZone: data.timeZone || DEFAULT_TIME_ZONE,
             };
@@ -276,6 +282,12 @@ const Wishlist = () => {
     const nextTasks = tasks.map((task) =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     );
+    setTasks(nextTasks);
+    persistTasks(nextTasks);
+  };
+
+  const handleRemoveTask = async (taskId) => {
+    const nextTasks = tasks.filter((task) => task.id !== taskId);
     setTasks(nextTasks);
     persistTasks(nextTasks);
   };
@@ -380,6 +392,13 @@ const Wishlist = () => {
                     <span className="wishlist-task-status">
                       {task.completed ? 'Completed' : 'Pending'}
                     </span>
+                    <button
+                      className="wishlist-task-remove"
+                      onClick={() => handleRemoveTask(task.id)}
+                      title="Remove task"
+                    >
+                      ×
+                    </button>
                   </li>
                 ))
               )}
@@ -412,13 +431,13 @@ const Wishlist = () => {
               </text>
             </svg>
           </div>
-          <small>Pie chart resets every day at 23:59.</small>
+          <small>Resets every day at 23:59.</small>
         </div>
       </section>
 
       <section className="wishlist-section wishlist-section--history">
         <header>
-          <h2>Daily Completion History</h2>
+          <h2>Daily Tasks Completion History</h2>
           <p>Track how consistently you execute on your intentions.</p>
         </header>
         {historyError && <div className="wishlist-error">{historyError}</div>}
@@ -441,14 +460,15 @@ const Wishlist = () => {
                   <div className="wishlist-history-progress">
                     <div className="wishlist-history-progress__track">
                       <div
-                        className={`wishlist-history-progress__fill${
-                          entry.hasTasks ? '' : ' wishlist-history-progress__fill--empty'
-                        }`}
+                        className={`wishlist-history-progress__fill${entry.hasTasks ? '' : ' wishlist-history-progress__fill--empty'
+                          }`}
                         style={{ width: entry.hasTasks ? `${entry.percent}%` : '100%' }}
                       />
                     </div>
                     <span className="wishlist-history-label">
-                      {entry.hasTasks ? `${entry.percent}% completed` : 'No tasks added'}
+                      {entry.hasTasks
+                        ? `${entry.percent}% completed (${entry.completedCount}/${entry.totalCount})`
+                        : 'No tasks added'}
                     </span>
                   </div>
                 </li>

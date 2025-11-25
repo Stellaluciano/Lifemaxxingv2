@@ -117,8 +117,32 @@ const Profile = () => {
         const end = new Date(heatmapYear, 11, 31);
         const startKey = start.getTime();
         const endKey = end.getTime();
-        const colRef = collection(db, 'users', user.uid, 'mainSessions');
-        const snap = await getDocs(colRef);
+
+        // Use sessionHistory for permanent record
+        const historyRef = collection(db, 'users', user.uid, 'sessionHistory');
+        let snap = await getDocs(historyRef);
+
+        // Migration: If history is empty, check mainSessions and backfill
+        if (snap.empty) {
+          const mainSessionsRef = collection(db, 'users', user.uid, 'mainSessions');
+          const mainSnap = await getDocs(mainSessionsRef);
+
+          if (!mainSnap.empty) {
+            // Perform migration
+            const migrationPromises = mainSnap.docs.map(docSnap => {
+              const data = docSnap.data();
+              return setDoc(doc(historyRef, docSnap.id), {
+                ...data,
+                savedAt: serverTimestamp(),
+                source: 'migration'
+              });
+            });
+            await Promise.all(migrationPromises);
+            // Re-fetch after migration
+            snap = await getDocs(historyRef);
+          }
+        }
+
         snap.forEach((docSnap) => {
           const data = docSnap.data();
           const startTimestamp = data.startTimestamp?.toDate ? data.startTimestamp.toDate() : data.startTimestamp;

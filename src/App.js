@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import StudyRoom from './components/StudyRoom';
 import TimerPage from './components/TimerPage';
-import RsipComingSoon from './pages/RsipComingSoon';
+import RsipPage from './pages/RsipPage';
 import CorePrinciples from './pages/CorePrinciples';
 import AuthTest from './pages/AuthTest';
 import Signup from './pages/Signup.jsx';
@@ -26,7 +26,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          
+
           <Route path="/" element={<StudyRoom />} />
 
           {/* ⭐ Signup Route */}
@@ -67,7 +67,7 @@ function App() {
             }
           />
 
-          <Route path="/rsip" element={<RsipComingSoon />} />
+          <Route path="/rsip" element={<RsipPage />} />
           <Route path="/core-principles" element={<CorePrinciples />} />
 
           {/* ⭐ TEMPORARY AUTH TEST PAGE */}

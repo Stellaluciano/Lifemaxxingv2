@@ -1,7 +1,7 @@
 import React from 'react';
 import './CircularTimer.css';
 
-const CircularTimer = ({ timeLeft, duration }) => {
+const CircularTimer = ({ timeLeft, duration, isWarning = false }) => {
     const radius = 180;
     const stroke = 8;
     const normalizedRadius = radius - stroke * 2;
@@ -34,7 +34,7 @@ const CircularTimer = ({ timeLeft, duration }) => {
                         cy={radius}
                     />
                     <circle
-                        className="circular-timer__progress"
+                        className={`circular-timer__progress${isWarning ? ' circular-timer__progress--warning' : ''}`}
                         strokeWidth={stroke}
                         strokeDasharray={circumference + ' ' + circumference}
                         style={{ strokeDashoffset }}
