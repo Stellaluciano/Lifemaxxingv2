@@ -86,7 +86,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.75rem;
-    max-width: 800px;
+    width: 100%;
 }
 
 .wishlist-direction-chip {
@@ -225,6 +225,25 @@
 .wishlist-task-list li.completed span {
     text-decoration: line-through;
     color: rgba(31, 35, 51, 0.5);
+}
+
+.wishlist-task-item--stale {
+    background: #fff8e6 !important;
+    /* Subtle yellow */
+    border-color: rgba(246, 173, 59, 0.2) !important;
+}
+
+.wishlist-task-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.wishlist-task-age {
+    font-size: 0.75rem;
+    color: #d97706;
+    /* Darker orange/brown */
+    font-weight: 600;
 }
 
 .wishlist-task-status {

@@ -271,11 +271,76 @@ const Wishlist = () => {
         id: createId(),
         text: newTask.trim(),
         completed: false,
+        createdAt: new Date().toISOString(),
       },
     ];
     setTasks(nextTasks);
     setNewTask('');
     persistTasks(nextTasks);
+  };
+
+  // Rollover Logic
+  useEffect(() => {
+    if (!user || !tasksCollectionRef || !todayTaskDocRef) return;
+
+    const checkAndPerformRollover = async () => {
+      try {
+        // Check if today's document already exists
+        const todayDocSnap = await import('firebase/firestore').then(mod => mod.getDoc(todayTaskDocRef));
+
+        if (todayDocSnap.exists()) {
+          return; // Today already started
+        }
+
+        // Find the most recent previous day
+        const q = query(tasksCollectionRef, orderBy('date', 'desc'), limit(1));
+        const querySnapshot = await import('firebase/firestore').then(mod => mod.getDocs(q));
+
+        if (!querySnapshot.empty) {
+          const lastDoc = querySnapshot.docs[0];
+          const lastDate = lastDoc.data().date;
+
+          // Ensure we aren't looking at today (though if today didn't exist, this should be past)
+          if (lastDate !== todayKey) {
+            const lastTasks = lastDoc.data().tasks || [];
+            const incompleteTasks = lastTasks.filter(t => !t.completed);
+
+            if (incompleteTasks.length > 0) {
+              // Carry them over!
+              // If they don't have a createdAt, assign the lastDate as a fallback
+              const carriedOverTasks = incompleteTasks.map(t => ({
+                ...t,
+                createdAt: t.createdAt || new Date(lastDate).toISOString()
+              }));
+
+              await setDoc(todayTaskDocRef, {
+                tasks: carriedOverTasks,
+                date: todayKey,
+                timeZone,
+                updatedAt: serverTimestamp(),
+              });
+              // We don't need to manually set state here, the snapshot listener will pick it up
+            }
+          }
+        }
+      } catch (error) {
+        console.warn("Error performing task rollover:", error);
+      }
+    };
+
+    checkAndPerformRollover();
+  }, [user, tasksCollectionRef, todayTaskDocRef, todayKey, timeZone]);
+
+  const getTaskAge = (createdAt) => {
+    if (!createdAt) return 0;
+    const created = new Date(createdAt);
+    const now = new Date();
+    // Reset times to midnight for accurate day difference
+    created.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(now - created);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   const handleToggleTask = async (taskId) => {
@@ -379,28 +444,43 @@ const Wishlist = () => {
               {tasks.length === 0 ? (
                 <li className="wishlist-empty">No tasks set for today.</li>
               ) : (
-                tasks.map((task) => (
-                  <li key={task.id} className={task.completed ? 'completed' : ''}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        onChange={() => handleToggleTask(task.id)}
-                      />
-                      <span>{task.text}</span>
-                    </label>
-                    <span className="wishlist-task-status">
-                      {task.completed ? 'Completed' : 'Pending'}
-                    </span>
-                    <button
-                      className="wishlist-task-remove"
-                      onClick={() => handleRemoveTask(task.id)}
-                      title="Remove task"
+                tasks.map((task) => {
+                  const daysOld = getTaskAge(task.createdAt);
+                  const isStale = !task.completed && daysOld > 0;
+
+                  return (
+                    <li
+                      key={task.id}
+                      className={`${task.completed ? 'completed' : ''} ${isStale ? 'wishlist-task-item--stale' : ''}`}
                     >
-                      ×
-                    </button>
-                  </li>
-                ))
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={task.completed}
+                          onChange={() => handleToggleTask(task.id)}
+                        />
+                        <div className="wishlist-task-content">
+                          <span>{task.text}</span>
+                          {isStale && (
+                            <span className="wishlist-task-age">
+                              {daysOld} day{daysOld > 1 ? 's' : ''} old
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      <span className="wishlist-task-status">
+                        {task.completed ? 'Completed' : 'Pending'}
+                      </span>
+                      <button
+                        className="wishlist-task-remove"
+                        onClick={() => handleRemoveTask(task.id)}
+                        title="Remove task"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  );
+                })
               )}
             </ul>
           )}

@@ -784,7 +784,7 @@ const TimerPage = ({
   const activeSubtitle = isActive && intentDetails?.description ? intentDetails.description : null;
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && isActive) {
+    if (typeof window !== 'undefined' && isActive && !isAuxiliary) {
       document.body.classList.add('timer-active');
     } else {
       document.body.classList.remove('timer-active');
@@ -792,7 +792,7 @@ const TimerPage = ({
     return () => {
       document.body.classList.remove('timer-active');
     };
-  }, [isActive]);
+  }, [isActive, isAuxiliary]);
 
   return (
     <div className={`timer-page${isActive ? ' timer-page--active' : ''}`}>
@@ -1000,7 +1000,7 @@ const TimerPage = ({
                   </div>
                   <div className="timer-log__details timer-log__details--full">
                     <div className="timer-log__time">
-                      {session.startTime} - {session.endTime}
+                      {session.date} {session.startTime} - {session.endTime}
                     </div>
                   </div>
                 </div>
