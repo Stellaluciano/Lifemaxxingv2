@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   collection,
@@ -230,11 +231,7 @@ const Profile = () => {
   };
 
   if (!user) {
-    return (
-      <div className="profile-page profile-page--full">
-        <div className="profile-empty">Please log in to edit your profile.</div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   return (

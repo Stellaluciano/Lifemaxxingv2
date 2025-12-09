@@ -144,29 +144,7 @@ body.timer-active .whiteboard {
   color: #f6ad3b;
 }
 
-.app-shell--rsip {
-  background: radial-gradient(circle at top, rgba(77, 90, 255, 0.25), transparent 55%),
-    #0c0f1a;
-  color: #f0f4ff;
-}
 
-.app-shell--rsip .top-nav {
-  background: rgba(12, 15, 26, 0.92);
-  border-bottom-color: rgba(147, 158, 255, 0.12);
-}
-
-.app-shell--rsip .top-nav__tabs {
-  background: rgba(70, 82, 255, 0.25);
-}
-
-.app-shell--rsip .top-nav__tab {
-  color: rgba(237, 240, 255, 0.92);
-}
-
-.app-shell--rsip .top-nav__tab--active {
-  background: rgba(108, 122, 255, 0.35);
-  box-shadow: none;
-}
 
 .whiteboard--rsip {
   flex: 1;
@@ -176,7 +154,6 @@ body.timer-active .whiteboard {
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #f0f4ff;
 }
 
 .rsip-placeholder {
@@ -2240,4 +2217,56 @@ body.timer-active .sidebar__button--active {
 .timer-page__edit-cancel:hover {
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.05);
+}
+.sacred-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  z-index: 10;
+}
+
+.sacred-nav__button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 24, 38, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.sacred-nav__button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.sacred-nav__button--active {
+  background: #fff;
+  border-color: rgba(20, 24, 38, 0.15);
+  color: #1f2333;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+body.timer-active .sacred-nav__button {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(246, 173, 59, 0.6);
+  border-color: transparent;
+}
+
+body.timer-active .sacred-nav__button:hover {
+  background: rgba(246, 173, 59, 0.1);
+  color: #f6ad3b;
+}
+
+body.timer-active .sacred-nav__button--active {
+  background: rgba(246, 173, 59, 0.15);
+  color: #f6ad3b;
+  border-color: rgba(246, 173, 59, 0.4);
+  box-shadow: 0 0 15px rgba(246, 173, 59, 0.15);
 }

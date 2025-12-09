@@ -60,7 +60,7 @@
     box-shadow: 0 4px 16px rgba(57, 90, 255, 0.12);
 }
 
-.wishlist-direction-form button {
+.wishlist-direction-form button[type="submit"] {
     padding: 0 1.5rem;
     border-radius: 999px;
     border: none;
@@ -71,12 +71,12 @@
     transition: transform 0.2s ease, background 0.2s ease;
 }
 
-.wishlist-direction-form button:hover:not(:disabled) {
+.wishlist-direction-form button[type="submit"]:hover:not(:disabled) {
     transform: translateY(-1px);
     background: #323852;
 }
 
-.wishlist-direction-form button:disabled {
+.wishlist-direction-form button[type="submit"]:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -86,18 +86,26 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 0.75rem;
-    max-width: 800px;
+    width: 100%;
 }
 
 .wishlist-direction-chip {
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    padding: 0.65rem 1.25rem;
+    justify-content: space-between;
+    padding: 0.65rem 1rem 0.65rem 1.25rem;
     background: #fff;
     border: 1px solid rgba(20, 24, 38, 0.08);
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(20, 24, 38, 0.03);
+    gap: 0.75rem;
+}
+
+.wishlist-direction-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .wishlist-direction-chip span {
@@ -109,6 +117,26 @@
     font-size: 0.75rem;
     color: rgba(31, 35, 51, 0.5);
     margin-top: 0.15rem;
+}
+
+.wishlist-direction-remove {
+    background: transparent;
+    border: none;
+    color: rgba(31, 35, 51, 0.4);
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wishlist-direction-remove:hover {
+    color: #e63946;
+    background: rgba(230, 57, 70, 0.1);
 }
 
 /* Tasks Section */
@@ -225,6 +253,25 @@
 .wishlist-task-list li.completed span {
     text-decoration: line-through;
     color: rgba(31, 35, 51, 0.5);
+}
+
+.wishlist-task-item--stale {
+    background: #fff8e6 !important;
+    /* Subtle yellow */
+    border-color: rgba(246, 173, 59, 0.2) !important;
+}
+
+.wishlist-task-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.wishlist-task-age {
+    font-size: 0.75rem;
+    color: #d97706;
+    /* Darker orange/brown */
+    font-weight: 600;
 }
 
 .wishlist-task-status {
@@ -391,4 +438,35 @@
     color: rgba(31, 35, 51, 0.5);
     padding: 2rem;
     font-style: italic;
+}
+
+.wishlist-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 600px;
+}
+
+.wishlist-edit-toggle {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(20, 24, 38, 0.15);
+    background: transparent;
+    color: #1f2333;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.wishlist-edit-toggle:hover {
+    background: rgba(20, 24, 38, 0.05);
+}
+
+.wishlist-edit-toggle.active {
+    background: #1f2333;
+    color: #fff;
+    border-color: #1f2333;
 }
