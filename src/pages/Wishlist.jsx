@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -9,6 +10,7 @@ import {
   query,
   serverTimestamp,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -57,6 +59,7 @@ const Wishlist = () => {
   const [newDirection, setNewDirection] = useState('');
   const [addingDirection, setAddingDirection] = useState(false);
   const [directionError, setDirectionError] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(true);
@@ -260,6 +263,18 @@ const Wishlist = () => {
     }
   };
 
+  const handleRemoveDirection = async (directionId) => {
+    if (!directionsCollectionRef || !directionId) {
+      return;
+    }
+    try {
+      await deleteDoc(doc(directionsCollectionRef, directionId));
+    } catch (error) {
+      console.warn('Failed to delete life direction', error);
+      setDirectionError('Could not delete life direction.');
+    }
+  };
+
   const handleAddTask = async (event) => {
     event.preventDefault();
     if (!newTask.trim()) {
@@ -370,13 +385,7 @@ const Wishlist = () => {
   const progressOffset = circumference - (completionPercent / 100) * circumference;
 
   if (!user) {
-    return (
-      <div className="wishlist-page">
-        <div className="wishlist-card">
-          <p>Please log in to manage your intentions.</p>
-        </div>
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -396,6 +405,13 @@ const Wishlist = () => {
           <button type="submit" disabled={addingDirection}>
             {addingDirection ? 'Adding...' : 'Add'}
           </button>
+          <button
+            type="button"
+            className={`wishlist-edit-toggle ${isEditMode ? 'active' : ''}`}
+            onClick={() => setIsEditMode(!isEditMode)}
+          >
+            {isEditMode ? 'Done' : 'Edit'}
+          </button>
         </form>
         {directionError && <div className="wishlist-error">{directionError}</div>}
         <div className="wishlist-direction-history">
@@ -404,16 +420,27 @@ const Wishlist = () => {
           ) : (
             directions.map((direction) => (
               <div className="wishlist-direction-chip" key={direction.id}>
-                <span>{direction.text}</span>
-                {direction.createdAt && (
-                  <small>
-                    Added{' '}
-                    {direction.createdAt.toLocaleDateString([], {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </small>
+                <div className="wishlist-direction-content">
+                  <span>{direction.text}</span>
+                  {direction.createdAt && (
+                    <small>
+                      Added{' '}
+                      {direction.createdAt.toLocaleDateString([], {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </small>
+                  )}
+                </div>
+                {isEditMode && (
+                  <button
+                    className="wishlist-direction-remove"
+                    onClick={() => handleRemoveDirection(direction.id)}
+                    title="Remove direction"
+                  >
+                    ×
+                  </button>
                 )}
               </div>
             ))

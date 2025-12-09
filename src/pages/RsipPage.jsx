@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Navigate } from 'react-router-dom';
 import { collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -181,7 +182,23 @@ const RsipPage = () => {
 
     // Render
     if (!user) {
-        return <div className="rsip-page">Please log in to view RSIP.</div>;
+        return (
+            <div className="rsip-page">
+                <header className="rsip-header">
+                    <h1 className="rsip-title">Habit Decision Trees</h1>
+                </header>
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: '#64748b',
+                    fontSize: '1.1rem'
+                }}>
+                    Please log in to manage your habit trees.
+                </div>
+            </div>
+        );
     }
 
     return (

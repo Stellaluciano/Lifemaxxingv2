@@ -27,7 +27,7 @@ const Layout = () => {
       <header className="top-nav">
         <div className="top-nav__inner">
           <NavLink to="/" className="top-nav__brand">
-            Lifemaxxing
+            Focusmaxxing
           </NavLink>
 
           <nav className="top-nav__tabs">
@@ -35,16 +35,15 @@ const Layout = () => {
               to="/"
               end={false}
               className={() =>
-                `top-nav__tab${
-                  ['/', '/timer', '/auxiliary-timer', '/core-principles'].includes(
-                    location.pathname
-                  )
-                    ? ' top-nav__tab--active'
-                    : ''
+                `top-nav__tab${['/', '/timer', '/auxiliary-timer', '/core-principles'].includes(
+                  location.pathname
+                )
+                  ? ' top-nav__tab--active'
+                  : ''
                 }`
               }
             >
-              CTDP
+              Sacred Seat
             </NavLink>
             <NavLink
               to="/rsip"
@@ -52,7 +51,7 @@ const Layout = () => {
                 `top-nav__tab${isActive ? ' top-nav__tab--active' : ''}`
               }
             >
-              RSIP
+              Habit Tree
             </NavLink>
           </nav>
 
@@ -79,42 +78,29 @@ const Layout = () => {
           <Outlet />
         </main>
       ) : (
-        <div className="content-area">
-          <aside className="sidebar">
-            <button
-              type="button"
-              className={`sidebar__button${
-                location.pathname === '/timer' ? ' sidebar__button--active' : ''
-              }`}
-              onClick={handleMainChainNavigate}
-            >
-              Main Timer
-            </button>
-            <button
-              type="button"
-              className={`sidebar__button${
-                location.pathname === '/auxiliary-timer' ? ' sidebar__button--active' : ''
-              }`}
-              onClick={handleAuxiliaryNavigate}
-            >
-              Auxiliary Timer
-            </button>
-            <div className="sidebar__spacer" />
-            <NavLink
-              to="/core-principles"
-              className={({ isActive }) =>
-                `sidebar__button sidebar__button--link${
-                  isActive ? ' sidebar__button--active' : ''
-                }`
-              }
-            >
-              3 Core Principles
-            </NavLink>
-          </aside>
-          <main className="whiteboard">
-            <Outlet />
-          </main>
-        </div>
+        <main className="whiteboard" style={{ flexDirection: 'column' }}>
+          {!['/login', '/signup'].includes(location.pathname) && (
+            <div className="sacred-nav">
+              <button
+                type="button"
+                className={`sacred-nav__button${location.pathname === '/auxiliary-timer' ? ' sacred-nav__button--active' : ''
+                  }`}
+                onClick={handleAuxiliaryNavigate}
+              >
+                Reservation Timer
+              </button>
+              <button
+                type="button"
+                className={`sacred-nav__button${location.pathname === '/timer' ? ' sacred-nav__button--active' : ''
+                  }`}
+                onClick={handleMainChainNavigate}
+              >
+                Main Timer
+              </button>
+            </div>
+          )}
+          <Outlet />
+        </main>
       )}
     </div>
   );
