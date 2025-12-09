@@ -11,6 +11,7 @@ import Login from './pages/Login.jsx';
 import Profile from './pages/Profile.jsx';
 import FocusRecord from './pages/FocusRecord.jsx';
 import Wishlist from './pages/Wishlist.jsx';
+import MyTemple from './pages/MyTemple.jsx';
 import './App.css';
 import './firebase';
 import {
@@ -36,6 +37,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/my-temple" element={<MyTemple />} />
           <Route path="/focus-record" element={<FocusRecord />} />
 
           <Route

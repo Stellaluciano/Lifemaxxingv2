@@ -79,7 +79,7 @@ const Layout = () => {
         </main>
       ) : (
         <main className="whiteboard" style={{ flexDirection: 'column' }}>
-          {!['/login', '/signup'].includes(location.pathname) && (
+          {['/', '/timer', '/auxiliary-timer', '/core-principles'].includes(location.pathname) && (
             <div className="sacred-nav">
               <button
                 type="button"
