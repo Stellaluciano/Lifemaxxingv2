@@ -221,7 +221,7 @@ const WeightTracker = () => {
                 <div className="weight-title-group">
                     <h2>Weight Tracker</h2>
                     <span className="weight-subtitle">
-                        Remember: Weight is just a number.
+                        Remember: Weight is only a number.
                     </span>
                 </div>
 
