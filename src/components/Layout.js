@@ -27,7 +27,7 @@ const Layout = () => {
       <header className="top-nav">
         <div className="top-nav__inner">
           <NavLink to="/" className="top-nav__brand">
-            Focusmaxxing
+            Focusmaxing
           </NavLink>
 
           <nav className="top-nav__tabs">
