@@ -145,9 +145,7 @@ const MyTemple = () => {
                 </section>
 
                 {/* SLEEP TRACKER CARD */}
-                <section className="temple-card sleep-tracker">
-                    <SleepTracker />
-                </section>
+                <SleepTracker />
 
             </div>
         </div>

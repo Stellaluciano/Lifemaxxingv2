@@ -15,6 +15,16 @@ import {
     serverTimestamp,
     Timestamp
 } from 'firebase/firestore';
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+    Cell
+} from 'recharts';
 import './SleepTracker.css';
 
 const DAYS_IN_WEEK = 7;
@@ -300,6 +310,34 @@ const SleepTracker = () => {
     }, [sleepCounts]);
 
 
+    // 3. Current Week Data for Bar Chart
+    const weeklyChartData = useMemo(() => {
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0-Sun, 1-Mon
+        const diffToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - diffToMon);
+        monday.setHours(0, 0, 0, 0);
+
+        const data = [];
+        const labels = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+
+        for (let i = 0; i < 7; i++) {
+            const cursor = new Date(monday);
+            cursor.setDate(monday.getDate() + i);
+            const key = cursor.toISOString().slice(0, 10);
+            const val = sleepCounts[key] || 0;
+            data.push({
+                day: labels[i],
+                val: val,
+                height: Math.min((val / 10) * 100, 100), // Max 10 hours for 100% height
+                isToday: key === today.toISOString().slice(0, 10)
+            });
+        }
+        return data;
+    }, [sleepCounts]);
+
     // Helpers for Rendering
     const getMonthLabels = (weeks, contextYear = null) => {
         return weeks.map((week, index) => {
@@ -329,29 +367,70 @@ const SleepTracker = () => {
     };
 
     return (
-        <div className="sleep-tracker-card">
-            <h2 className="sleep-title">Sleep Tracker</h2>
-            <div className="sleep-subtitle">{isAsleep ? 'Resting...' : 'Ready to rest?'}</div>
-
-            <div className="sleep-state-display">
-                <div className={isAsleep ? "sleep-moon" : "sleep-sun"}></div>
-                {isAsleep ? (
-                    <>
-                        <div className="sleep-status-text">{elapsedTime}</div>
-                        <div className="sleep-timer">Current Sleep Duration</div>
-                    </>
-                ) : (
-                    <div className="sleep-status-text" style={{ fontSize: '1.5rem' }}>Good Day</div>
-                )}
+        <div className="sleep-tracker-card sketch-layout">
+            <div className="sleep-card-header">
+                <div>
+                    <h2 className="sleep-title">Sleep Tracker</h2>
+                    <div className="sleep-subtitle">Rest is part of the work.</div>
+                </div>
+                <div className="sleep-header-actions">
+                    <button className="sleep-history-btn" onClick={() => { setShowHistoryModal(true); setIsEntryMode(false); }}>
+                        Show History
+                    </button>
+                </div>
             </div>
 
-            <button className={`sleep-action-btn ${isAsleep ? 'wake-btn' : ''}`} onClick={handleSleepToggle}>
-                {isAsleep ? 'Wake Up' : 'Go to Sleep'}
-            </button>
+            <div className="sleep-card-body">
+                {/* 1. Centered Status Icon */}
+                <div className="sleep-status-section-centered">
+                    <div className={isAsleep ? "sleep-moon-lg" : "sleep-sun-lg"}></div>
+                    <div className="sleep-status-msg">
+                        <span className="sleep-timer-large" style={{ visibility: isAsleep ? 'visible' : 'hidden' }}>
+                            {isAsleep ? elapsedTime : '00h 00m'}
+                        </span>
+                    </div>
+                </div>
 
-            <button className="sleep-manual-link" onClick={() => { setShowHistoryModal(true); setIsEntryMode(false); }}>
-                History & Manual Entry
-            </button>
+                {/* 2. Bar Chart */}
+                <div className="sleep-recharts-wrapper">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={weeklyChartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                            <XAxis
+                                dataKey="day"
+                                tickLine={false}
+                                axisLine={{ stroke: '#f0f0f0' }}
+                                tick={{ fontSize: 12, fill: '#aaa' }}
+                                dy={5}
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 11, fill: '#ccc' }}
+                                ticks={[0, 2, 4, 6, 8, 10]}
+                                domain={[0, 10]}
+                            />
+                            <Tooltip
+                                cursor={{ fill: '#f7f7f7', radius: 4 }}
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                formatter={(value) => [`${value}h`, 'Sleep']}
+                            />
+                            <Bar dataKey="val" radius={[4, 4, 0, 0]} maxBarSize={50}>
+                                {weeklyChartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={'#1f2333'} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                {/* 3. Bottom Action Button */}
+                <div className="sleep-action-footer">
+                    <button className={`sleep-main-btn-full ${isAsleep ? 'wake-btn' : ''}`} onClick={handleSleepToggle}>
+                        {isAsleep ? 'Wake Up' : 'Go to Sleep'}
+                    </button>
+                </div>
+            </div>
 
             {/* MAIN MODAL */}
             {showHistoryModal && createPortal(
@@ -369,9 +448,9 @@ const SleepTracker = () => {
                             </div>
                         </div>
 
-                        <div className="sleep-modal-content">
+                        <div className="sleep-modal-body" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}>
                             {isEntryMode ? (
-                                <div className="manual-entry-form">
+                                <div className="manual-entry-form" style={{ overflowY: 'auto', padding: '1.5rem' }}>
                                     <h4>{editingId ? 'Edit Sleep Log' : 'New Sleep Log'}</h4>
                                     <div className="form-group">
                                         <label>Sleep Start</label>
@@ -388,7 +467,8 @@ const SleepTracker = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="sleep-history-list" style={{ maxHeight: '250px', marginBottom: '2rem' }}>
+                                    {/* Scrollable History List */}
+                                    <div className="sleep-history-list-container" style={{ overflowY: 'auto', flex: 1, padding: '1rem 1.5rem' }}>
                                         {historyData.length === 0 ? (
                                             <p className="empty-msg">No sleep logs found.</p>
                                         ) : (
@@ -413,17 +493,16 @@ const SleepTracker = () => {
                                         )}
                                     </div>
 
-                                    {/* RECENT HEATMAP (Last 3 Months) */}
-                                    <div className="profile-heatmap-wrapper" style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+                                    {/* Fixed Heatmap Footer */}
+                                    <div className="profile-heatmap-wrapper" style={{ padding: '1rem 1.5rem', borderTop: '1px solid #eee', background: '#fff', flexShrink: 0 }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                                             <div className="profile-heatmap__title" style={{ fontSize: '0.9rem', marginBottom: 0 }}>Recent Sleep</div>
                                             <button style={{ background: 'none', border: 'none', color: '#395aff', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }} onClick={() => setShowFullHistory(true)}>
                                                 View Full History →
                                             </button>
                                         </div>
-
                                         <div className="profile-heatmap">
-                                            {/* Months Row for Recent */}
+                                            {/* Months Row */}
                                             <div className="profile-heatmap__months-row">
                                                 <span className="profile-heatmap__month-spacer" />
                                                 <div className="profile-heatmap__months">
