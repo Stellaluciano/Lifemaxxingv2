@@ -68,6 +68,7 @@ const Wishlist = () => {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState('');
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const [timeZone, setTimeZone] = useState(DEFAULT_TIME_ZONE);
 
   const todayKey = useMemo(() => formatDateKey(new Date(), timeZone), [timeZone]);
@@ -202,7 +203,9 @@ const Wishlist = () => {
       return undefined;
     }
     setHistoryLoading(true);
-    const q = query(tasksCollectionRef, orderBy('date', 'desc'), limit(14));
+    // If showing all, fetch more (e.g. 50). If not, fetch enough to ensure we get 5 after filtering today (e.g. 7).
+    const limitCount = showAllHistory ? 50 : 7;
+    const q = query(tasksCollectionRef, orderBy('date', 'desc'), limit(limitCount));
     const unsub = onSnapshot(
       q,
       (snapshot) => {
@@ -228,7 +231,9 @@ const Wishlist = () => {
             };
           })
           .filter((entry) => entry.date !== todayKey);
-        setHistory(entries);
+
+        // If not showing all, enforce the limit of 5 explicitly
+        setHistory(showAllHistory ? entries : entries.slice(0, 5));
         setHistoryLoading(false);
         setHistoryError('');
       },
@@ -240,7 +245,7 @@ const Wishlist = () => {
       }
     );
     return () => unsub();
-  }, [tasksCollectionRef, todayKey]);
+  }, [tasksCollectionRef, todayKey, showAllHistory]);
 
   const handleAddDirection = async (event) => {
     event.preventDefault();
@@ -553,35 +558,43 @@ const Wishlist = () => {
         ) : history.length === 0 ? (
           <p className="wishlist-empty">No history recorded yet.</p>
         ) : (
-          <ul className="wishlist-history-list">
-            {history.map((entry) => {
-              const formattedDate = entry.date
-                ? formatDisplayDate(entry.date, entry.timeZone)
-                : entry.id;
-              return (
-                <li
-                  key={entry.id}
-                  className={`wishlist-history-item${entry.hasTasks ? '' : ' wishlist-history-item--empty'}`}
-                >
-                  <div className="wishlist-history-date">{formattedDate}</div>
-                  <div className="wishlist-history-progress">
-                    <div className="wishlist-history-progress__track">
-                      <div
-                        className={`wishlist-history-progress__fill${entry.hasTasks ? '' : ' wishlist-history-progress__fill--empty'
-                          }`}
-                        style={{ width: entry.hasTasks ? `${entry.percent}%` : '100%' }}
-                      />
+          <>
+            <ul className="wishlist-history-list">
+              {history.map((entry) => {
+                const formattedDate = entry.date
+                  ? formatDisplayDate(entry.date, entry.timeZone)
+                  : entry.id;
+                return (
+                  <li
+                    key={entry.id}
+                    className={`wishlist-history-item${entry.hasTasks ? '' : ' wishlist-history-item--empty'}`}
+                  >
+                    <div className="wishlist-history-date">{formattedDate}</div>
+                    <div className="wishlist-history-progress">
+                      <div className="wishlist-history-progress__track">
+                        <div
+                          className={`wishlist-history-progress__fill${entry.hasTasks ? '' : ' wishlist-history-progress__fill--empty'
+                            }`}
+                          style={{ width: entry.hasTasks ? `${entry.percent}%` : '100%' }}
+                        />
+                      </div>
+                      <span className="wishlist-history-label">
+                        {entry.hasTasks
+                          ? `${entry.percent}% completed (${entry.completedCount}/${entry.totalCount})`
+                          : 'No tasks added'}
+                      </span>
                     </div>
-                    <span className="wishlist-history-label">
-                      {entry.hasTasks
-                        ? `${entry.percent}% completed (${entry.completedCount}/${entry.totalCount})`
-                        : 'No tasks added'}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+            <button
+              className="wishlist-history-toggle"
+              onClick={() => setShowAllHistory(!showAllHistory)}
+            >
+              {showAllHistory ? 'Show Recent Only' : 'Show All History'}
+            </button>
+          </>
         )}
       </section>
     </div>

@@ -8,6 +8,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore'; // Cleaned up imports
 import WeightTracker from '../components/WeightTracker';
+import StrengthTracker from '../components/StrengthTracker';
 import './MyTemple.css';
 
 const DEFAULT_WATER_GOAL = 2500; // mL
@@ -129,6 +130,11 @@ const MyTemple = () => {
                 {/* WEIGHT TRACKER CARD */}
                 <section className="temple-card weight-tracker">
                     <WeightTracker />
+                </section>
+
+                {/* STRENGTH TRACKER CARD */}
+                <section className="temple-card strength-tracker">
+                    <StrengthTracker />
                 </section>
 
             </div>

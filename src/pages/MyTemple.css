@@ -74,6 +74,10 @@
     font-weight: 700;
 }
 
+.temple-card.strength-tracker {
+    grid-column: 1 / -1;
+}
+
 /* Water Vessel Styling */
 .water-tracker {
     /* Specific override if needed */

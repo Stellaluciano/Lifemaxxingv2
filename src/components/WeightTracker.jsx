@@ -180,8 +180,13 @@ const WeightTracker = () => {
                 bmi = (item.weightKg / (heightM * heightM)).toFixed(1);
             }
 
+            // Create timestamp for proportional x-axis
+            const [y, m, d] = item.dateKey.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+
             return {
-                date: item.dateKey, // for X axis
+                date: item.dateKey, // for reference
+                timestamp: dateObj.getTime(), // for proportional X axis
                 displayWeight: unit === 'kg'
                     ? item.weightKg
                     : Math.round((item.weightKg * 2.20462) * 10) / 10,
@@ -214,6 +219,30 @@ const WeightTracker = () => {
         const inches = Math.round((feetTotal - feet) * 12);
         return `${cm}cm (${feet}'${inches}")`
     };
+
+    const chartTicks = useMemo(() => {
+        if (!displayHistory || displayHistory.length === 0) return [];
+        const timestamps = displayHistory.map(d => d.timestamp);
+        const min = Math.min(...timestamps);
+        const max = Math.max(...timestamps);
+        const oneDay = 24 * 60 * 60 * 1000;
+        const ticks = [];
+
+        // Generate daily ticks from min to max
+        let current = min;
+        while (current <= max) {
+            ticks.push(current);
+            current += oneDay;
+        }
+
+        // If range is large (e.g. > 2 weeks), filter ticks to avoid overcrowding
+        // This is a simple adaptive strategy
+        if (ticks.length > 14) {
+            const step = Math.ceil(ticks.length / 7);
+            return ticks.filter((_, i) => i % step === 0);
+        }
+        return ticks;
+    }, [displayHistory]);
 
     return (
         <div className="weight-tracker-card" style={{ position: 'relative' }}>
@@ -250,17 +279,17 @@ const WeightTracker = () => {
                         <LineChart data={displayHistory}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                             <XAxis
-                                dataKey="date"
+                                dataKey="timestamp"
+                                type="number"
+                                domain={['dataMin', 'dataMax']}
+                                ticks={chartTicks}
                                 tick={{ fontSize: 10, fill: '#aaa' }}
                                 tickLine={false}
                                 axisLine={false}
-                                tickFormatter={(str) => {
-                                    // Parse YYYY-MM-DD manually to prevent timezone shifts
-                                    const [y, m, d] = str.split('-').map(Number);
-                                    const date = new Date(y, m - 1, d);
+                                tickFormatter={(unixTime) => {
+                                    const date = new Date(unixTime);
                                     return `${date.getMonth() + 1}/${date.getDate()}`;
                                 }}
-                                minTickGap={30}
                             />
                             <YAxis
                                 domain={['auto', 'auto']}
@@ -278,18 +307,17 @@ const WeightTracker = () => {
                                     return [value, name];
                                 }}
                                 labelFormatter={(label) => {
-                                    // Parse YYYY-MM-DD manually for tooltip as well
-                                    const [y, m, d] = label.split('-').map(Number);
-                                    const date = new Date(y, m - 1, d);
+                                    const date = new Date(label);
                                     return date.toLocaleDateString();
                                 }}
                                 // Custom content needed to show BMI properly
                                 content={({ active, payload, label }) => {
                                     if (active && payload && payload.length) {
                                         const data = payload[0].payload;
-                                        // Re-parse date for tooltip
-                                        const [y, m, d] = label.split('-').map(Number);
-                                        const dateStr = new Date(y, m - 1, d).toLocaleDateString();
+                                        // Use the explicit date string from data if available, or format label
+                                        const dateStr = data.date
+                                            ? new Date(data.timestamp).toLocaleDateString()
+                                            : new Date(label).toLocaleDateString();
 
                                         return (
                                             <div style={{ background: '#fff', padding: '10px 14px', border: 'none', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
