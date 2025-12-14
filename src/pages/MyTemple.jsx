@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore'; // Cleaned up imports
 import WeightTracker from '../components/WeightTracker';
 import StrengthTracker from '../components/StrengthTracker';
+import ClimbingTracker from '../components/ClimbingTracker';
 import './MyTemple.css';
 
 const DEFAULT_WATER_GOAL = 2500; // mL
@@ -85,6 +86,21 @@ const MyTemple = () => {
 
             <div className="temple-dashboard">
 
+                {/* WEIGHT TRACKER CARD */}
+                <section className="temple-card weight-tracker">
+                    <WeightTracker />
+                </section>
+
+                {/* CLIMBING TRACKER CARD */}
+                <section className="temple-card climbing-tracker">
+                    <ClimbingTracker />
+                </section>
+
+                {/* STRENGTH TRACKER CARD */}
+                <section className="temple-card strength-tracker">
+                    <StrengthTracker />
+                </section>
+
                 {/* HYDRATION TRACKER CARD */}
                 <section className="temple-card water-tracker" style={{ position: 'relative' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', width: '100%' }}>
@@ -125,16 +141,6 @@ const MyTemple = () => {
                             </div>
                         </>
                     )}
-                </section>
-
-                {/* WEIGHT TRACKER CARD */}
-                <section className="temple-card weight-tracker">
-                    <WeightTracker />
-                </section>
-
-                {/* STRENGTH TRACKER CARD */}
-                <section className="temple-card strength-tracker">
-                    <StrengthTracker />
                 </section>
 
             </div>
