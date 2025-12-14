@@ -10,6 +10,7 @@ import {
 import WeightTracker from '../components/WeightTracker';
 import StrengthTracker from '../components/StrengthTracker';
 import ClimbingTracker from '../components/ClimbingTracker';
+import SleepTracker from '../components/SleepTracker';
 import './MyTemple.css';
 
 const DEFAULT_WATER_GOAL = 2500; // mL
@@ -141,6 +142,11 @@ const MyTemple = () => {
                             </div>
                         </>
                     )}
+                </section>
+
+                {/* SLEEP TRACKER CARD */}
+                <section className="temple-card sleep-tracker">
+                    <SleepTracker />
                 </section>
 
             </div>

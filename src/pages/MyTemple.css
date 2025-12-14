@@ -81,9 +81,10 @@
 
 
 /* Water Vessel Styling */
-.temple-card.water-tracker {
-    grid-column: 1 / -1;
-}
+/* .temple-card.water-tracker {
+    grid-column: auto; 
+} */
+
 
 .water-tracker {
     /* Specific override if needed */

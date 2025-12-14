@@ -247,9 +247,9 @@ const WeightTracker = () => {
     return (
         <div className="weight-tracker-card" style={{ position: 'relative' }}>
             <div className="weight-header">
-                <div className="weight-title-group">
-                    <h2>Weight Tracker</h2>
-                    <span className="weight-subtitle">
+                <div className="weight-title-group" style={{ display: 'block', textAlign: 'left', marginRight: 'auto' }}>
+                    <h2 style={{ margin: 0, textAlign: 'left', display: 'block' }}>Weight Tracker</h2>
+                    <span className="weight-subtitle" style={{ textAlign: 'left', display: 'block', width: '100%', marginTop: '4px' }}>
                         Remember: Weight is only a number.
                     </span>
                 </div>

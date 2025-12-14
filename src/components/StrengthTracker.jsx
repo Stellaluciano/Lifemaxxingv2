@@ -207,6 +207,9 @@ const StrengthTracker = () => {
                         displayWeight: convert(d.weight)
                     }));
 
+                    // Use exact data points as ticks to ensure every log entry is labeled
+                    const chartTicks = chartData.map(d => d.timestamp);
+
                     return (
                         <div key={key} className="lift-card">
                             <span className="lift-icon">{icon}</span>
@@ -237,7 +240,7 @@ const StrengthTracker = () => {
                                                 tickLine={false}
                                                 axisLine={false}
                                                 interval="preserveStartEnd"
-                                                minTickGap={30}
+                                                ticks={chartTicks}
                                             />
                                             <YAxis
                                                 domain={['auto', 'auto']}
