@@ -13,6 +13,10 @@ import FocusRecord from './pages/FocusRecord.jsx';
 import Wishlist from './pages/Wishlist.jsx';
 import MyTemple from './pages/MyTemple.jsx';
 import PrivatePage from './pages/PrivatePage.jsx';
+import Timeline from './pages/nancy/Timeline';
+import Photos from './pages/nancy/Photos';
+import Map from './pages/nancy/Map';
+import BucketList from './pages/nancy/BucketList';
 import './App.css';
 import './firebase';
 import {
@@ -80,6 +84,10 @@ function App() {
         </Route>
 
         <Route path="/nancy" element={<PrivatePage />} />
+        <Route path="/nancy/timeline" element={<Timeline />} />
+        <Route path="/nancy/photos" element={<Photos />} />
+        <Route path="/nancy/map" element={<Map />} />
+        <Route path="/nancy/bucket-list" element={<BucketList />} />
       </Routes>
     </BrowserRouter>
   );

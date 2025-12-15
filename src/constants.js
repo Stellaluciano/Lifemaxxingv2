@@ -22,5 +22,6 @@ export const TASK_CATEGORY_OPTIONS = [
 
 // Authorized emails for Private Pages
 export const ADMIN_EMAILS = [
-  'douglasj216@outlook.com'
+  'douglasj216@outlook.com',
+  'wangxr1218@gmail.com'
 ];
