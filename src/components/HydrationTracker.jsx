@@ -90,6 +90,7 @@ const HydrationTracker = () => {
     // Goal State
     const [showGoalInput, setShowGoalInput] = useState(false);
     const [newGoal, setNewGoal] = useState('');
+    const [isSurging, setIsSurging] = useState(false);
 
     // --- Goal Listener ---
     useEffect(() => {
@@ -130,6 +131,13 @@ const HydrationTracker = () => {
     // --- 2. Update Water Function ---
     const updateWater = async (change) => {
         if (!user) return;
+
+        // Trigger surge animation for positive adds
+        if (change > 0) {
+            setIsSurging(true);
+            setTimeout(() => setIsSurging(false), 1000);
+        }
+
         const waterDocRef = doc(db, 'users', user.uid, 'temple_water', todayKey);
         const newAmount = Math.max(0, waterAmount + change);
         setWaterAmount(newAmount); // Optimistic
@@ -399,10 +407,17 @@ const HydrationTracker = () => {
                                 <div key={i} className="water-column">
                                     <div className={`water-bar-track ${isToday ? 'today-track' : ''}`}>
                                         <div
-                                            className={`water-bar-fill ${isToday ? 'liquid-fill' : 'solid-fill'}`}
+                                            className={`water-bar-fill ${isToday ? 'liquid-fill' : 'solid-fill'} ${isToday && isSurging ? 'surging' : ''}`}
                                             style={{ height: `${percentage}%` }}
                                         >
-                                            {isToday && <div className="liquid-wave"></div>}
+                                            {isToday && (
+                                                <>
+                                                    <div className="liquid-wave"></div>
+                                                    <div className="water-bubble b1"></div>
+                                                    <div className="water-bubble b2"></div>
+                                                    <div className="water-bubble b3"></div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                     <span className={`water-day-label ${isToday ? 'active-day' : ''}`}>{d.day}</span>
