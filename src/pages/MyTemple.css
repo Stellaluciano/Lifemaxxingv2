@@ -3,7 +3,7 @@
     width: 100%;
     max-width: 1120px;
     margin: 0 auto;
-    padding: clamp(2rem, 5vw, 4rem) 1.5rem;
+    padding: 0 1.5rem 2rem 1.5rem;
     color: #1f2333;
     /* Dark text for light mode */
     font-family: var(--font-family);
@@ -11,7 +11,7 @@
 }
 
 .my-temple-header {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
 }
 
