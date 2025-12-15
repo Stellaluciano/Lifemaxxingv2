@@ -39,7 +39,6 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/my-temple" element={<MyTemple />} />
-          <Route path="/nancy" element={<PrivatePage />} />
           <Route path="/focus-record" element={<FocusRecord />} />
 
           <Route
@@ -75,9 +74,12 @@ function App() {
           <Route path="/core-principles" element={<CorePrinciples />} />
 
           {/* ⭐ TEMPORARY AUTH TEST PAGE */}
+          {/* ⭐ TEMPORARY AUTH TEST PAGE */}
           <Route path="/auth-test" element={<AuthTest />} />
 
         </Route>
+
+        <Route path="/nancy" element={<PrivatePage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -5,15 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { ReactComponent as UserIcon } from '../assets/user-icon.svg';
 
-import { ADMIN_EMAILS } from '../constants';
-
 const UserMenu = () => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const menuRef = useRef(null);
-
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email);
 
   useEffect(() => {
     if (!user) {
@@ -73,11 +69,6 @@ const UserMenu = () => {
           <NavLink to="/my-temple" className="top-nav__dropdown-item" onClick={() => setOpen(false)}>
             My Temple
           </NavLink>
-          {isAdmin && (
-            <NavLink to="/nancy" className="top-nav__dropdown-item" onClick={() => setOpen(false)}>
-              Nancy ♡
-            </NavLink>
-          )}
           <button
             type="button"
             className="top-nav__dropdown-item top-nav__dropdown-item--danger"
