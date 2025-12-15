@@ -273,7 +273,7 @@ const ClimbingTracker = () => {
                                             </span>
                                         </div>
                                         <button className="delete-log-btn" onClick={() => handleDelete(climb.id)}>
-                                            Trash
+                                            Delete
                                         </button>
                                     </div>
                                 ))

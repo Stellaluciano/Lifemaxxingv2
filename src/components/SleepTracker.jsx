@@ -166,12 +166,16 @@ const SleepTracker = () => {
         setSleepCounts(counts);
     }, [user]);
 
+    // Initial Fetch for Chart
+    useEffect(() => {
+        fetchHeatmapData();
+    }, [fetchHeatmapData]);
+
     useEffect(() => {
         if (showHistoryModal) {
             fetchHistory();
-            fetchHeatmapData();
         }
-    }, [showHistoryModal, fetchHistory, fetchHeatmapData]);
+    }, [showHistoryModal, fetchHistory]);
 
     const handleSleepToggle = async () => {
         if (!user) return;
@@ -311,28 +315,35 @@ const SleepTracker = () => {
 
 
     // 3. Current Week Data for Bar Chart
+    // 3. Last 7 Days Data for Bar Chart
     const weeklyChartData = useMemo(() => {
         const today = new Date();
-        const dayOfWeek = today.getDay(); // 0-Sun, 1-Mon
-        const diffToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        today.setHours(0, 0, 0, 0);
 
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - diffToMon);
-        monday.setHours(0, 0, 0, 0);
+        // Start from 6 days ago -> Today (total 7 days)
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - 6);
 
         const data = [];
-        const labels = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+        const dayLabels = ['Su', 'M', 'T', 'W', 'Th', 'F', 'S']; // 0=Sun
 
         for (let i = 0; i < 7; i++) {
-            const cursor = new Date(monday);
-            cursor.setDate(monday.getDate() + i);
-            const key = cursor.toISOString().slice(0, 10);
+            const cursor = new Date(startDate);
+            cursor.setDate(startDate.getDate() + i);
+
+            // Construct YYYY-MM-DD using local time to match saved keys
+            const y = cursor.getFullYear();
+            const m = String(cursor.getMonth() + 1).padStart(2, '0');
+            const d = String(cursor.getDate()).padStart(2, '0');
+            const key = `${y}-${m}-${d}`;
+
             const val = sleepCounts[key] || 0;
+
             data.push({
-                day: labels[i],
+                day: dayLabels[cursor.getDay()],
                 val: val,
                 height: Math.min((val / 10) * 100, 100), // Max 10 hours for 100% height
-                isToday: key === today.toISOString().slice(0, 10)
+                isToday: i === 6 // Last item is today
             });
         }
         return data;
