@@ -166,14 +166,15 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background: #e0e7ff;
+    /* Solid Water Blue for history */
+    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
     border-radius: 0 0 10px 10px;
-    transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: height 0.5s ease;
 }
 
 .solid-fill {
-    background: #dbeafe;
-    /* Lighter blue for history */
+    background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+    /* Darker blue for history to match liquid */
 }
 
 /* LIQUID EFFECT - REALISTIC */
