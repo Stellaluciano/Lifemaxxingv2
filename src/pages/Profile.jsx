@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ADMIN_EMAILS } from '../constants';
 import {
   collection,
   doc,
@@ -73,6 +74,13 @@ const Profile = () => {
   const [heatmapData, setHeatmapData] = useState([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  /* Robust authorization check */
+  const isAuthorized = useMemo(() => {
+    if (!user || !user.email) return false;
+    // Hardcode fallback just in case constant is empty
+    const normalizedEmail = user.email.toLowerCase().trim();
+    return ADMIN_EMAILS.some(e => e.toLowerCase().trim() === normalizedEmail) || normalizedEmail === 'douglasj216@outlook.com';
+  }, [user]);
 
   const profileDocRef = useMemo(() => {
     if (!user) {
@@ -235,13 +243,17 @@ const Profile = () => {
   }
 
   return (
-    <div className="profile-page profile-page--full">
+    <div className="profile-page profile-page--full" style={{ position: 'relative' }}>
       <section className="profile-header">
         <h1>Profile</h1>
         {dateJoined && (
           <p className="profile-date-joined">
             Officially Locked in since{' '}
             {new Date(dateJoined).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}
+            <br />
+            <small style={{ marginTop: '5px', display: 'block', opacity: 0.6 }}>
+              User: {user?.email}
+            </small>
           </p>
         )}
       </section>
@@ -334,6 +346,41 @@ const Profile = () => {
           <span>More</span>
         </div>
       </section>
+
+      {isAuthorized && (
+        <div style={{
+          marginTop: '3rem',
+          paddingBottom: '3rem',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          maxWidth: '1000px',
+          width: '100%',
+          margin: '3rem auto 0'
+        }}>
+          <NavLink
+            to="/nancy"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: '#fff0f5',
+              color: '#db2777',
+              padding: '0.8rem 2.5rem',
+              borderRadius: '9999px',
+              textDecoration: 'none',
+              fontWeight: '700',
+              fontSize: '1.1rem',
+              border: '2px solid #fecdd3',
+              boxShadow: '0 4px 15px rgba(236, 72, 153, 0.15)',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Nancy♡
+          </NavLink>
+        </div>
+      )}
     </div>
   );
 };

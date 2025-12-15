@@ -1,0 +1,466 @@
+/* Base Page Layout */
+.my-temple-page {
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem 1.5rem;
+    color: #1f2333;
+    /* Dark text for light mode */
+    font-family: var(--font-family);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.my-temple-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.my-temple-header h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    color: #1f2333;
+}
+
+.my-temple-header p {
+    color: rgba(31, 35, 51, 0.7);
+    font-size: 1.15rem;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Dashboard Grid */
+.temple-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .temple-dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Common Card Styles */
+.temple-card {
+    background: #fff;
+    border: 1px solid rgba(20, 24, 38, 0.08);
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 40px -20px rgba(20, 24, 38, 0.08);
+    /* Soft shadow */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.temple-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 50px -15px rgba(20, 24, 38, 0.12);
+}
+
+.temple-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #1f2333;
+    width: 100%;
+    text-align: center;
+    font-weight: 700;
+}
+
+.temple-card.strength-tracker {
+    grid-column: 1 / -1;
+}
+
+
+
+
+/* Water Vessel Styling */
+/* .temple-card.water-tracker {
+    grid-column: auto; 
+} */
+
+
+.water-tracker {
+    /* Specific override if needed */
+}
+
+.water-vessel-container {
+    position: relative;
+    width: 130px;
+    height: 220px;
+    margin-bottom: 2.5rem;
+}
+
+.water-vessel {
+    width: 100%;
+    height: 100%;
+    /* Minimal glass look for light mode */
+    border: 4px solid #e0e7ff;
+    border-radius: 40px 40px 60px 60px;
+    position: relative;
+    overflow: hidden;
+    background: #f9fafc;
+}
+
+.water-level {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(180deg, #60a5fa 0%, #395aff 100%);
+    transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Subtle wave top */
+.water-level::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Bubbles animation */
+.bubble {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: rise 3s infinite ease-in;
+    bottom: -10px;
+}
+
+@keyframes rise {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translateY(-200px) scale(1.2);
+        opacity: 0;
+    }
+}
+
+.water-info {
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(4px);
+}
+
+.current-ml {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1f2333;
+    display: block;
+}
+
+.goal-ml {
+    font-size: 0.85rem;
+    color: rgba(31, 35, 51, 0.6);
+    font-weight: 500;
+}
+
+.water-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    width: 100%;
+}
+
+.water-btn {
+    background: #fff;
+    border: 1px solid #e0e7ff;
+    color: #395aff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.water-btn:hover {
+    background: #f0f4ff;
+    border-color: #395aff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(57, 90, 255, 0.15);
+}
+
+/* Weight Tracker Styling */
+.weight-tracker {
+    height: 100%;
+}
+
+.weight-graph-container {
+    height: 240px;
+    width: 100%;
+    margin-bottom: 2rem;
+    background: #f9fafc;
+    /* Light gray background for graph area */
+    border-radius: 16px;
+    padding: 1rem;
+    position: relative;
+    border: 1px solid rgba(20, 24, 38, 0.04);
+}
+
+.weight-input-area {
+    display: flex;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 300px;
+}
+
+.weight-input {
+    flex: 1;
+    background: #fff;
+    border: 1px solid rgba(20, 24, 38, 0.12);
+    color: #1f2333;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.weight-input:focus {
+    border-color: #395aff;
+    box-shadow: 0 0 0 3px rgba(57, 90, 255, 0.1);
+}
+
+.weight-btn {
+    background: #395aff;
+    border: none;
+    color: #fff;
+    padding: 0 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.weight-btn:hover {
+    background: #2846e0;
+    transform: translateY(-1px);
+}
+
+/* SVG Graph */
+.weight-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.grid-line {
+    stroke: rgba(0, 0, 0, 0.05);
+    /* Light grid lines */
+    stroke-width: 1;
+}
+
+.graph-line {
+    fill: none;
+    stroke: #395aff;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 6px rgba(57, 90, 255, 0.2));
+}
+
+.graph-point {
+    fill: #fff;
+    stroke: #395aff;
+    stroke-width: 2.5;
+    transition: r 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+.graph-point:hover {
+    r: 6;
+    stroke-width: 3;
+}
+
+.graph-tooltip {
+    fill: #1f2333;
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.graph-point-group:hover .graph-tooltip {
+    opacity: 1;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Hydration History Modal --- */
+.history-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.history-modal {
+    background: #fff;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.history-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.history-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #1f2333;
+    font-weight: 700;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #999;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.water-calendar {
+    width: 100%;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.calendar-day-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-cell {
+    aspect-ratio: 1;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 0.25rem;
+    font-size: 0.7rem;
+    position: relative;
+    background: #fafafa;
+}
+
+.calendar-cell.today {
+    border-color: #395aff;
+    box-shadow: 0 0 0 2px rgba(57, 90, 255, 0.1);
+    background: #fff;
+}
+
+.calendar-cell.empty {
+    background: transparent;
+    border: none;
+}
+
+.calendar-date {
+    font-weight: 700;
+    color: #ccc;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+}
+
+.calendar-cell.today .calendar-date {
+    color: #395aff;
+}
+
+.calendar-bottles {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: 1px;
+    padding-top: 10px;
+    /* space for date */
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.calendar-amount {
+    text-align: center;
+    color: #666;
+    font-size: 0.65rem;
+}
+
+.history-legend {
+    margin-top: 1.5rem;
+    text-align: right;
+    font-size: 0.9rem;
+    color: #666;
+}

@@ -27,7 +27,7 @@ const Layout = () => {
       <header className="top-nav">
         <div className="top-nav__inner">
           <NavLink to="/" className="top-nav__brand">
-            Focusmaxxing
+            Focusmaxing
           </NavLink>
 
           <nav className="top-nav__tabs">
@@ -79,7 +79,7 @@ const Layout = () => {
         </main>
       ) : (
         <main className="whiteboard" style={{ flexDirection: 'column' }}>
-          {!['/login', '/signup'].includes(location.pathname) && (
+          {['/', '/timer', '/auxiliary-timer', '/core-principles'].includes(location.pathname) && (
             <div className="sacred-nav">
               <button
                 type="button"

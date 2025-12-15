@@ -470,3 +470,29 @@
     color: #fff;
     border-color: #1f2333;
 }
+
+.wishlist-history-toggle {
+    margin: 1.5rem auto 0;
+    display: block;
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(20, 24, 38, 0.15);
+    background: #fff;
+    color: #1f2333;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wishlist-history-toggle:hover {
+    background: #f9fafc;
+    border-color: rgba(57, 90, 255, 0.3);
+    color: #395aff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(20, 24, 38, 0.05);
+}
+
+.wishlist-history-toggle:active {
+    transform: translateY(0);
+}

@@ -1,0 +1,188 @@
+/* Hides spinner controls for number inputs */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.weight-tracker-card {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.weight-header {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.weight-title-group {
+    display: block;
+    text-align: left;
+    margin-right: auto;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.weight-title-group h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #1f2333;
+}
+
+.weight-subtitle {
+    display: block;
+    font-size: 0.9rem;
+    color: rgba(31, 35, 51, 0.6);
+    margin-top: 0.25rem;
+    text-align: left;
+}
+
+.weight-controls-top {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.weight-time-btn {
+    background: transparent;
+    border: 1px solid rgba(20, 24, 38, 0.1);
+    color: rgba(31, 35, 51, 0.6);
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.weight-time-btn:hover {
+    background: rgba(20, 24, 38, 0.05);
+    color: #1f2333;
+}
+
+.weight-time-btn.active {
+    background: #1f2333;
+    color: #fff;
+    border-color: #1f2333;
+}
+
+.weight-goal-btn {
+    background: rgba(57, 90, 255, 0.05);
+    border: 1px solid rgba(57, 90, 255, 0.2);
+    color: #395aff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: fit-content;
+}
+
+.weight-goal-btn:hover {
+    background: rgba(57, 90, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(57, 90, 255, 0.15);
+}
+
+.weight-chart-wrapper {
+    flex: 1;
+    min-height: 250px;
+    margin-bottom: 2rem;
+    font-size: 0.8rem;
+}
+
+.weight-input-section {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(20, 24, 38, 0.06);
+}
+
+.weight-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.weight-input-field {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    padding-right: 4rem;
+    border: 1px solid rgba(20, 24, 38, 0.15);
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #1f2333;
+    transition: all 0.2s;
+}
+
+.weight-input-field:focus {
+    outline: none;
+    border-color: #395aff;
+    box-shadow: 0 0 0 3px rgba(57, 90, 255, 0.1);
+}
+
+.weight-unit-toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    background: rgba(20, 24, 38, 0.05);
+    padding: 0.2rem;
+    border-radius: 8px;
+}
+
+.unit-btn {
+    border: none;
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: rgba(31, 35, 51, 0.5);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.unit-btn.active {
+    background: #fff;
+    color: #1f2333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.weight-log-btn {
+    background: #395aff;
+    color: #fff;
+    border: none;
+    padding: 0 1.5rem;
+    height: 46px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.weight-log-btn:hover {
+    background: #2846e0;
+    transform: translateY(-1px);
+}
+
+.weight-empty-state {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: rgba(31, 35, 51, 0.4);
+    font-style: italic;
+    font-size: 0.9rem;
+}

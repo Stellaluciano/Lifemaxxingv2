@@ -1,14 +1,26 @@
-export const SACRED_INTENT_STORAGE_KEY = 'sacred-seat-intent';
-export const MAIN_CHAIN_DURATION_KEY = 'main-chain-duration';
-export const AUX_CHAIN_DURATION_KEY = 'aux-chain-duration';
-export const MAIN_CHAIN_SESSION_KEY = 'main-chain-sessions';
-export const AUX_CHAIN_SESSION_KEY = 'aux-chain-sessions';
-export const AUTO_START_MAIN_KEY = 'main-auto-start';
+export const SACRED_INTENT_STORAGE_KEY = 'sacred_intent';
+export const MAIN_CHAIN_DURATION_KEY = 'main_timer_duration_preference';
+export const AUX_CHAIN_DURATION_KEY = 'aux_timer_duration_preference';
+
+export const MAIN_CHAIN_SESSION_KEY = 'main_chain_session';
+export const AUX_CHAIN_SESSION_KEY = 'aux_chain_session';
+
+export const AUTO_START_MAIN_KEY = 'auto_start_main_timer';
+
+export const DEFAULT_TASK_CATEGORY = 'study';
+
 export const TASK_CATEGORY_OPTIONS = [
   { value: 'study', label: 'Study' },
-  { value: 'workout', label: 'Workout' },
-  { value: 'chores', label: 'Chores' },
   { value: 'work', label: 'Work' },
-  { value: 'custom', label: '➕ Custom' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'writing', label: 'Writing' },
+  { value: 'coding', label: 'Coding' },
+  { value: 'meditation', label: 'Meditation' },
+  { value: 'exercise', label: 'Exercise' },
+  { value: 'custom', label: 'Custom' }
 ];
-export const DEFAULT_TASK_CATEGORY = TASK_CATEGORY_OPTIONS[0].value;
+
+// Authorized emails for Private Pages
+export const ADMIN_EMAILS = [
+  'douglasj216@outlook.com'
+];

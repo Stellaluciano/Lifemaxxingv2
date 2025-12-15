@@ -32,6 +32,57 @@ body,
   border-bottom: 1px solid rgba(20, 24, 38, 0.08);
   display: flex;
   justify-content: center;
+  position: relative;
+  /* Ensure stacking context */
+  z-index: 1000;
+  /* Keep top nav above content */
+}
+
+.top-nav__user-menu {
+  position: relative;
+}
+
+.top-nav__dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px -10px rgba(20, 24, 38, 0.2);
+  border: 1px solid rgba(20, 24, 38, 0.08);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  z-index: 1001;
+  animation: modal-fade-in 0.2s ease;
+}
+
+.top-nav__dropdown-item {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  color: #1f2333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.top-nav__dropdown-item:hover {
+  background: rgba(20, 24, 38, 0.04);
+}
+
+.top-nav__dropdown-item--danger {
+  color: #ef4444;
+}
+
+.top-nav__dropdown-item--danger:hover {
+  background: #fef2f2;
 }
 
 .top-nav__inner {
@@ -2218,6 +2269,7 @@ body.timer-active .sidebar__button--active {
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.05);
 }
+
 .sacred-nav {
   display: flex;
   justify-content: center;
@@ -2243,14 +2295,14 @@ body.timer-active .sidebar__button--active {
 .sacred-nav__button:hover {
   background: rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .sacred-nav__button--active {
   background: #fff;
   border-color: rgba(20, 24, 38, 0.15);
   color: #1f2333;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 body.timer-active .sacred-nav__button {
