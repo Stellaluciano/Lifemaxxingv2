@@ -12,20 +12,9 @@ import {
     onSnapshot,
     deleteDoc
 } from 'firebase/firestore';
-import {
-    ResponsiveContainer,
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    Tooltip,
-    CartesianGrid,
-    Cell
-} from 'recharts';
 import './HydrationTracker.css';
 
 const DEFAULT_WATER_GOAL = 2500; // mL
-const BOTTLE_CAPACITY = 3000; // For visual cap
 const DAYS_IN_WEEK = 7;
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -98,6 +87,30 @@ const HydrationTracker = () => {
     const [manualDate, setManualDate] = useState('');
     const [manualAmount, setManualAmount] = useState('');
 
+    // Goal State
+    const [showGoalInput, setShowGoalInput] = useState(false);
+    const [newGoal, setNewGoal] = useState('');
+
+    // --- Goal Listener ---
+    useEffect(() => {
+        if (!user) return;
+        const unsub = onSnapshot(doc(db, 'users', user.uid, 'settings', 'hydration'), (docSnap) => {
+            if (docSnap.exists()) {
+                setWaterGoal(docSnap.data().dailyGoal || 2500);
+            }
+        });
+        return () => unsub();
+    }, [user]);
+
+    const saveGoal = async () => {
+        const g = parseInt(newGoal, 10);
+        if (g > 0) {
+            await setDoc(doc(db, 'users', user.uid, 'settings', 'hydration'), { dailyGoal: g }, { merge: true });
+            setShowGoalInput(false);
+            setNewGoal('');
+        }
+    };
+
     // --- 1. Real-time Listener for Today ---
     useEffect(() => {
         if (!user) return;
@@ -169,10 +182,10 @@ const HydrationTracker = () => {
     }, [user]);
 
     useEffect(() => {
-        if (showHistoryModal) {
+        if (user) {
             fetchHistoryData();
         }
-    }, [showHistoryModal, fetchHistoryData]);
+    }, [user, fetchHistoryData]);
 
     // --- Actions: Save Manual, Edit, Delete ---
     const handleSaveManual = async () => {
@@ -227,22 +240,21 @@ const HydrationTracker = () => {
     // SleepChart is last 7 days from Monday. Let's stick to that pattern.
     const weeklyChartData = useMemo(() => {
         const today = new Date();
-        const dayOfWeek = today.getDay();
-        const diffToMon = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - diffToMon);
-        monday.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        // Start from 6 days ago -> Today (total 7 days)
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - 6);
 
         const data = [];
-        const labels = ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'];
+        const dayLabels = ['Su', 'M', 'T', 'W', 'Th', 'F', 'S']; // 0=Sun
 
         for (let i = 0; i < 7; i++) {
-            const cursor = new Date(monday);
-            cursor.setDate(monday.getDate() + i);
+            const cursor = new Date(startDate);
+            cursor.setDate(startDate.getDate() + i);
             const key = formatDateKey(cursor);
-            // Use current live amount for today if available? 
-            // setHydrationCounts might be stale for *today* if we don't merge.
-            // Actually, we can check if key === todayKey, use waterAmount.
+            const label = dayLabels[cursor.getDay()];
+
             let val = 0;
             if (key === todayKey) {
                 val = waterAmount;
@@ -255,7 +267,7 @@ const HydrationTracker = () => {
             // The chart on the MAIN CARD needs live data for today.
 
             data.push({
-                day: labels[i],
+                day: label,
                 val: Math.round(val / 100) / 10, // Convert to Liters (e.g. 2500 -> 2.5)
                 raw: val,
                 isToday: key === todayKey
@@ -324,7 +336,7 @@ const HydrationTracker = () => {
         return 'profile-heatmap__day--level1';
     };
 
-    const visualHeightPercentage = Math.min((waterAmount / BOTTLE_CAPACITY) * 100, 100);
+
 
 
     return (
@@ -334,53 +346,80 @@ const HydrationTracker = () => {
                     <h2 className="water-title">Hydration Tracker</h2>
                     <div className="water-subtitle">Stay Hydrated!</div>
                 </div>
-                <div className="water-header-actions">
+                <div className="water-header-actions" style={{ gap: '0.5rem' }}>
+                    <button className="goal-btn" onClick={() => { setNewGoal(waterGoal); setShowGoalInput(true); }}>
+                        Target: {waterGoal}ml
+                    </button>
                     <button className="history-btn" onClick={() => setShowHistoryModal(true)}>
                         Show History
                     </button>
                 </div>
             </div>
 
-            <div className="water-card-body">
-                {/* 1. Water Vessel (Centered) */}
-                <div className="water-vessel-wrapper">
-                    <div className="water-vessel-container">
-                        <div className="water-vessel">
-                            <div className="water-level" style={{ height: `${visualHeightPercentage}%` }}>
-                                <div className="bubble" style={{ left: '20%', width: '10px', height: '10px', animationDelay: '0s' }}></div>
-                                <div className="bubble" style={{ left: '60%', width: '14px', height: '14px', animationDelay: '1.5s' }}></div>
-                                <div className="bubble" style={{ left: '40%', width: '8px', height: '8px', animationDelay: '3s' }}></div>
-                            </div>
-                        </div>
-                        <div className="water-info">
-                            <span className="current-ml">{waterAmount}</span>
-                            <span className="goal-ml">/ {waterGoal} ml</span>
+            {/* Goal Input Modal/Overlay */}
+            {showGoalInput && createPortal(
+                <div className="goal-input-overlay" onClick={() => setShowGoalInput(false)}>
+                    <div className="goal-input-card" onClick={e => e.stopPropagation()}>
+                        <h3>Set Daily Goal</h3>
+                        <input
+                            type="number"
+                            value={newGoal}
+                            onChange={e => setNewGoal(e.target.value)}
+                            autoFocus
+                        />
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                            <button className="cancel-btn" onClick={() => setShowGoalInput(false)}>Cancel</button>
+                            <button className="save-btn" onClick={saveGoal}>Save</button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
+            )}
 
-                {/* 2. Bar Chart (Same as SleepTracker but Blue) */}
-                <div className="water-recharts-wrapper">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={weeklyChartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                            <XAxis dataKey="day" tickLine={false} axisLine={{ stroke: '#f0f0f0' }} tick={{ fontSize: 12, fill: '#aaa' }} dy={5} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#ccc' }} domain={[0, 'auto']} />
-                            <Tooltip cursor={{ fill: '#f7f7f7', radius: 4 }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} formatter={(val) => [`${val}L`, 'Water']} />
-                            <Bar dataKey="val" radius={[4, 4, 0, 0]} maxBarSize={50}>
-                                {weeklyChartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.isToday ? '#395aff' : '#395aff90'} />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
+            <div className="water-card-body">
+
+                {/* Custom HTML Liquid Chart */}
+                <div className="water-html-chart-container">
+                    {/* Y-Axis */}
+                    <div className="water-y-axis">
+                        <span style={{ bottom: '100%' }}>{waterGoal}ml</span>
+                        <span style={{ bottom: '75%' }}>{Math.round(waterGoal * 0.75)}</span>
+                        <span style={{ bottom: '50%' }}>{Math.round(waterGoal * 0.5)}</span>
+                        <span style={{ bottom: '25%' }}>{Math.round(waterGoal * 0.25)}</span>
+                        <span style={{ bottom: '0%' }}>0</span>
+                    </div>
+
+                    <div className="water-html-chart">
+                        {weeklyChartData.map((d, i) => {
+                            const isToday = d.isToday;
+                            // Calculate percentage of goal, capped at 100 for visual sanity
+                            const percentage = Math.min((d.raw / waterGoal) * 100, 100);
+
+                            return (
+                                <div key={i} className="water-column">
+                                    <div className={`water-bar-track ${isToday ? 'today-track' : ''}`}>
+                                        <div
+                                            className={`water-bar-fill ${isToday ? 'liquid-fill' : 'solid-fill'}`}
+                                            style={{ height: `${percentage}%` }}
+                                        >
+                                            {isToday && <div className="liquid-wave"></div>}
+                                        </div>
+                                    </div>
+                                    <span className={`water-day-label ${isToday ? 'active-day' : ''}`}>{d.day}</span>
+                                    {/* Removed redundant tag if we have axis, or keep it? User asked for axis. Tag is nice for exact value on today. Keeping it. */}
+                                    {isToday && <div className="today-val-tag">{d.raw}ml</div>}
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* 3. Footer Actions */}
                 <div className="water-controls-footer">
-                    <button className="water-btn remove" onClick={() => updateWater(-250)}>-</button>
+                    <button className="water-btn remove" onClick={() => updateWater(-250)}>- 250ml</button>
                     <button className="water-btn" onClick={() => updateWater(250)}>+ 250ml</button>
                     <button className="water-btn" onClick={() => updateWater(500)}>+ 500ml</button>
+                    <button className="water-btn" onClick={() => updateWater(1000)}>+ 1L</button>
                 </div>
             </div>
 

@@ -73,6 +73,25 @@ input[type=number] {
     border-color: #1f2333;
 }
 
+.weight-goal-btn {
+    background: rgba(57, 90, 255, 0.05);
+    border: 1px solid rgba(57, 90, 255, 0.2);
+    color: #395aff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    height: fit-content;
+}
+
+.weight-goal-btn:hover {
+    background: rgba(57, 90, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(57, 90, 255, 0.15);
+}
+
 .weight-chart-wrapper {
     flex: 1;
     min-height: 250px;

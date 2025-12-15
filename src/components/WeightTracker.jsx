@@ -256,12 +256,7 @@ const WeightTracker = () => {
 
                 {/* Height button moved to top-right */}
                 <button
-                    className="weight-time-btn"
-                    style={{
-                        padding: '0.4rem 0.8rem',
-                        fontSize: '0.85rem',
-                        height: 'fit-content'
-                    }}
+                    className="weight-goal-btn"
                     onClick={() => {
                         setHeightInput(heightCm ? (heightUnit === 'cm' ? heightCm : (heightCm / 30.48).toFixed(2)) : '');
                         setShowHeightModal(true);

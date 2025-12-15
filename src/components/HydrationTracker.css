@@ -61,6 +61,24 @@
     color: #1f2333;
 }
 
+.goal-btn {
+    background: rgba(57, 90, 255, 0.05);
+    border: 1px solid rgba(57, 90, 255, 0.2);
+    color: #395aff;
+    padding: 0.4rem 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.goal-btn:hover {
+    background: rgba(57, 90, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(57, 90, 255, 0.15);
+}
+
 /* Body Layout */
 .water-card-body {
     flex: 1;
@@ -70,105 +88,260 @@
     gap: 1.5rem;
 }
 
-/* 1. Vessel Wrapper */
-.water-vessel-wrapper {
+/* 1. HTML Liquid Chart Wrapper */
+.water-y-axis {
+    width: 45px;
+    height: 100%;
+    position: relative;
+    margin-right: 10px;
+    padding-bottom: 32px;
+    /* Reserve space for chart labels so 0% aligns with track bottom */
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.water-y-axis span {
+    position: absolute;
+    right: 0;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    transform: translateY(50%);
+    font-weight: 500;
+}
+
+.water-html-chart-container {
+    width: 100%;
+    height: 320px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 180px;
-    /* Condensed height */
-    position: relative;
-    margin-bottom: 1rem;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    padding-top: 1rem;
+    padding-left: 0;
 }
 
-/* Vessel styles from MyTemple.css adapted */
-.water-vessel-container {
-    position: relative;
-    width: 100px;
-    /* Slightly smaller than original 130 */
-    height: 160px;
-    /* Slightly smaller than original 220 */
-}
-
-.water-vessel {
+.water-html-chart {
+    display: flex;
     width: 100%;
     height: 100%;
-    border: 3px solid #e0e7ff;
-    border-radius: 30px 30px 50px 50px;
-    overflow: hidden;
-    background: #f9fafc;
-    position: relative;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px;
 }
 
-.water-level {
+.water-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    height: 100%;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 1;
+}
+
+.water-bar-track {
+    width: 100%;
+    height: 100%;
+    /* Goal container is transparent or subtle */
+    background: transparent;
+    border: 1px dashed rgba(57, 90, 255, 0.1);
+    /* Subtle goal guide for all days? */
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.today-track {
+    /* Current Day Goal Container */
+    border: 2px dashed #93c5fd;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 15px rgba(57, 90, 255, 0.05);
+}
+
+.water-bar-fill {
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    background: linear-gradient(180deg, #60a5fa 0%, #395aff 100%);
-    transition: height 0.6s ease;
+    background: #e0e7ff;
+    border-radius: 0 0 10px 10px;
+    transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.water-level::after {
-    /* Wave top */
-    content: '';
+.solid-fill {
+    background: #dbeafe;
+    /* Lighter blue for history */
+}
+
+/* LIQUID EFFECT - REALISTIC */
+.liquid-fill {
+    background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+    /* Deep realistic blue */
+    box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.4), inset 0 -2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 10px 10px;
+    opacity: 0.95;
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
     width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.4);
+    transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.bubble {
+.liquid-wave {
     position: absolute;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    animation: rise 3s infinite ease-in;
-    bottom: -10px;
+    top: -10px;
+    left: 0;
+    width: 200%;
+    height: 20px;
+    /* Soft Sine Wave */
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7' preserveAspectRatio='none'%3E%3Cpath d='M800 44.3c-77.7 0-149-16.3-215-38-66.7-21.8-132.5-23-205 3.3S242.7 44.3 165 44.3c-33.3 0-66.2-2.3-100-7V88h735V44.3z' fill='%23ffffff' fill-opacity='0.4'/%3E%3C/svg%3E");
+    background-size: 100px 20px;
+    animation: waveX 2s linear infinite;
 }
 
-@keyframes rise {
-    0% {
-        transform: translateY(0);
-        opacity: 0;
-    }
+.liquid-wave::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Offset Wave - Slower and lower opacity */
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7' preserveAspectRatio='none'%3E%3Cpath d='M800 44.3c-77.7 0-149-16.3-215-38-66.7-21.8-132.5-23-205 3.3S242.7 44.3 165 44.3c-33.3 0-66.2-2.3-100-7V88h735V44.3z' fill='%23ffffff' fill-opacity='0.2'/%3E%3C/svg%3E");
+    background-size: 130px 20px;
+    /* Different period for randomness */
+    animation: waveX 4s linear infinite reverse;
+}
 
-    50% {
-        opacity: 0.8;
+@keyframes waveX {
+    0% {
+        transform: translateX(0);
     }
 
     100% {
-        transform: translateY(-150px);
-        opacity: 0;
+        transform: translateX(-50%);
     }
 }
 
-.water-info {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.3rem 0.6rem;
-    border-radius: 8px;
-    text-align: center;
-    backdrop-filter: blur(4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.current-ml {
-    font-size: 1.2rem;
-    font-weight: 800;
-    color: #1f2333;
-    display: block;
-}
-
-.goal-ml {
-    font-size: 0.7rem;
-    color: #666;
+.water-day-label {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #9ca3af;
     font-weight: 500;
 }
+
+.water-day-label.active-day {
+    color: #395aff;
+    font-weight: 700;
+}
+
+.today-val-tag {
+    position: absolute;
+    top: -30px;
+    background: #395aff;
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(57, 90, 255, 0.2);
+    white-space: nowrap;
+    animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Goal Modal Styles */
+.goal-input-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(31, 35, 51, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.goal-input-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    width: 320px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.goal-input-card h3 {
+    margin: 0 0 1rem 0;
+    color: #1f2333;
+}
+
+.goal-input-card input {
+    font-size: 1.8rem;
+    padding: 0.5rem;
+    width: 100%;
+    text-align: center;
+    border: 2px solid #e0e7ff;
+    border-radius: 16px;
+    color: #395aff;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.goal-input-card input:focus {
+    outline: none;
+    border-color: #395aff;
+}
+
+.goal-input-card .save-btn {
+    background: #395aff;
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.goal-input-card .save-btn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.goal-input-card .cancel-btn {
+    background: transparent;
+    color: #999;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-right: 1rem;
+}
+
 
 
 /* 2. Chart Wrapper */
@@ -205,10 +378,15 @@
 }
 
 .water-btn.remove {
-    color: #d9534f;
-    background: rgba(255, 99, 71, 0.05);
-    border-color: rgba(217, 83, 79, 0.1);
-    flex: 0 0 50px;
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+}
+
+.water-btn.remove:hover {
+    background: #ffe4e6;
+    border-color: #fda4af;
+    transform: translateY(-1px);
 }
 
 
@@ -417,6 +595,34 @@
     width: 100%;
     height: 14px;
     border-radius: 2px;
+}
+
+/* Scoped sizing for Water Heatmap - Compact Squares */
+.water-heatmap .profile-heatmap__weeks {
+    gap: 4px;
+}
+
+.water-heatmap .profile-heatmap__week {
+    gap: 4px;
+}
+
+.water-heatmap .profile-heatmap__day {
+    height: 14px;
+    /* Standard compact height */
+    aspect-ratio: 1;
+    /* Force square */
+    border-radius: 3px;
+}
+
+.water-heatmap .profile-heatmap__day-labels {
+    gap: 4px;
+    margin-right: 6px;
+}
+
+.water-heatmap .profile-heatmap__day-labels span {
+    height: 14px;
+    line-height: 14px;
+    font-size: 10px;
 }
 
 /* Heatmap Levels for Water - Scoped to override base */
