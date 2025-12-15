@@ -173,8 +173,13 @@ const StrengthTracker = () => {
     return (
         <div className="strength-tracker-container">
             <div className="top-bar">
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Strength Tracker</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Strength Tracker</h2>
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: 'rgba(31, 35, 51, 0.6)', marginTop: '0.25rem' }}>
+                        It's what you do in the dark that puts you in the light.
+                    </div>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <div className="time-range-controls">

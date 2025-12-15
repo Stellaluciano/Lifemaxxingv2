@@ -26,6 +26,14 @@ import './ClimbingTracker.css';
 
 const V_GRADES = ['VB', 'V0', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17'];
 
+const getLocalToday = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const ClimbingTracker = () => {
     const { user } = useAuth();
     const [climbs, setClimbs] = useState([]);
@@ -35,7 +43,7 @@ const ClimbingTracker = () => {
 
     // Form State
     const [selectedGrade, setSelectedGrade] = useState('V3');
-    const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0]);
+    const [logDate, setLogDate] = useState(getLocalToday());
 
     // Graph Color Helper
     const getBarColor = (grade) => {
@@ -93,8 +101,7 @@ const ClimbingTracker = () => {
         return V_GRADES.map(grade => ({
             grade,
             count: counts[grade]
-        })).filter(d => d.count > 0 || timeRange === 'ALL'); // Hide empty grades unless 'ALL' (or maybe always hide empty? User preference usually to see distribution)
-        // Actually, let's filter out standard empty grades from the tail if they are 0, but keep standard range
+        })).filter(d => d.count > 0 || timeRange === 'ALL');
     }, [climbs, timeRange]);
 
     const handleLogClimb = async () => {
@@ -113,7 +120,7 @@ const ClimbingTracker = () => {
             setShowLogModal(false);
             // Reset to defaults
             setSelectedGrade('V3');
-            setLogDate(new Date().toISOString().split('T')[0]);
+            setLogDate(getLocalToday());
         } catch (error) {
             console.error("Error logging climb:", error);
         }
@@ -151,8 +158,9 @@ const ClimbingTracker = () => {
                             dataKey="grade"
                             tickLine={false}
                             axisLine={{ stroke: '#eee' }}
-                            tick={{ fontSize: 12, fill: '#666' }}
-                            ticks={['VB', 'V1', 'V3', 'V5', 'V7', 'V9', 'V11', 'V13', 'V15', 'V17']}
+                            tick={{ fontSize: 10, fill: '#666' }}
+                            interval={timeRange === 'ALL' ? 'preserveStartEnd' : 0}
+                            ticks={timeRange === 'ALL' ? ['VB', 'V1', 'V3', 'V5', 'V7', 'V9', 'V11', 'V13', 'V15', 'V17'] : undefined}
                         />
                         <YAxis
                             allowDecimals={false}
