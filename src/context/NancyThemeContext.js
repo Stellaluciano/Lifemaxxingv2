@@ -14,7 +14,7 @@ export const NancyThemeProvider = ({ children }) => {
 
     const themes = {
         pink: '#fff0f5', // Lavender Blush
-        green: '#f0fff4', // Honeydew / Mint Cream equivalent
+        green: '#bee6c8', // Custom user green (RGB 190, 230, 200)
     };
 
     const toggleTheme = () => {
