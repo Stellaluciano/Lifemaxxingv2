@@ -5,6 +5,7 @@ import { ADMIN_EMAILS } from '../constants';
 import NancyNavbar from '../components/NancyNavbar';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useNancyTheme } from '../context/NancyThemeContext';
 
 const TimerBlock = ({ value, label }) => (
     <div style={{
@@ -140,6 +141,7 @@ const TimerDisplay = ({ timer }) => {
 const PrivatePage = () => {
     const { user, loading } = useAuth();
     const navigate = useNavigate();
+    const { currentBg } = useNancyTheme();
 
     // Timer State
     const [timers, setTimers] = useState([]);
@@ -266,7 +268,7 @@ const PrivatePage = () => {
             left: 0,
             width: '100%',
             minHeight: '100%',
-            background: '#fff0f5', // Full Page Pink Tint
+            background: currentBg, // Full Page Dynamic Tint
             padding: '4rem 1rem',
             display: 'flex',
             flexDirection: 'column',
@@ -279,20 +281,19 @@ const PrivatePage = () => {
                     position: 'absolute',
                     top: '2rem',
                     left: '2rem',
-                    background: 'white',
+                    background: 'transparent',
                     border: 'none',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    fontSize: '2rem',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                    color: '#db2777',
-                    fontSize: '1.5rem',
+                    color: '#be185d',
+                    transition: 'transform 0.2s',
+                    padding: '0.5rem',
+                    lineHeight: 1,
                     zIndex: 20
                 }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Back to Profile"
             >
                 ←
             </button>
@@ -424,14 +425,17 @@ const PrivatePage = () => {
                             </div>
 
                             <form onSubmit={handleAddTimer} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <input
-                                    type="text"
-                                    placeholder="Title (e.g. First Kiss)"
-                                    value={newTimer.title}
-                                    onChange={e => setNewTimer({ ...newTimer, title: e.target.value })}
-                                    required
-                                    style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem' }}
-                                />
+                                <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                                    <label style={{ fontSize: '0.9rem', color: '#666', fontWeight: 'bold', marginLeft: '0.5rem' }}>Event</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Time Together"
+                                        value={newTimer.title}
+                                        onChange={e => setNewTimer({ ...newTimer, title: e.target.value })}
+                                        required
+                                        style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #ddd', fontSize: '1rem' }}
+                                    />
+                                </div>
                                 <div style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
                                     <label style={{ fontSize: '0.9rem', color: '#666', fontWeight: 'bold', marginLeft: '0.5rem' }}>Date & Time</label>
                                     <input

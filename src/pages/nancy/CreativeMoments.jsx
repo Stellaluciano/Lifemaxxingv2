@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-
 import { db } from '../../firebase';
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, Timestamp } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-import NancyNavbar from '../../components/NancyNavbar';
+import { useNavigate } from 'react-router-dom';
+import { useNancyTheme } from '../../context/NancyThemeContext';
 
 const CreativeMoments = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const { currentBg } = useNancyTheme();
     const [moments, setMoments] = useState([]);
     const [formData, setFormData] = useState({ text: '', date: '' });
     const [editingId, setEditingId] = useState(null);
@@ -91,13 +93,35 @@ const CreativeMoments = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5',
+            background: currentBg, // Dynamic tint
             padding: '4rem 1rem',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center'
+            alignItems: 'center',
+            position: 'relative'
         }}>
-            <NancyNavbar />
+            {/* Back Button */}
+            <button
+                onClick={() => navigate('/nancy')}
+                style={{
+                    position: 'absolute',
+                    top: '2rem',
+                    left: '2rem',
+                    background: 'transparent',
+                    border: 'none',
+                    fontSize: '2rem',
+                    cursor: 'pointer',
+                    color: '#be185d',
+                    transition: 'transform 0.2s',
+                    padding: '0.5rem',
+                    lineHeight: 1
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Back to Home"
+            >
+                ←
+            </button>
 
             {/* Title */}
             <h1 style={{

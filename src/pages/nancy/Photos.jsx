@@ -4,8 +4,11 @@ import { collection, query, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp,
 import { useAuth } from '../../context/AuthContext';
 import NancyNavbar from '../../components/NancyNavbar';
 
+import { useNancyTheme } from '../../context/NancyThemeContext';
+
 const Photos = () => {
     const { user } = useAuth();
+    const { currentBg } = useNancyTheme();
     const [photos, setPhotos] = useState([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newPhoto, setNewPhoto] = useState({ url: '', caption: '', date: '' });
@@ -51,7 +54,7 @@ const Photos = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5',
+            background: currentBg,
             padding: '4rem 1rem',
             display: 'flex',
             flexDirection: 'column',

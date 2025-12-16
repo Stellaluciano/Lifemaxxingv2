@@ -3,9 +3,11 @@ import { db } from '../../firebase';
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import NancyNavbar from '../../components/NancyNavbar';
+import { useNancyTheme } from '../../context/NancyThemeContext';
 
 const Timeline = () => {
     const { user } = useAuth();
+    const { currentBg } = useNancyTheme();
     const [events, setEvents] = useState([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newEvent, setNewEvent] = useState({ date: '', title: '', description: '', icon: '❤️', imageUrl: '' });
@@ -65,7 +67,7 @@ const Timeline = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5', // Pink tint
+            background: currentBg, // Dynamic tint
             padding: '2rem 1rem',
             display: 'flex',
             flexDirection: 'column',

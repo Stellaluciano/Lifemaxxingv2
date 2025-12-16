@@ -4,8 +4,11 @@ import { collection, query, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp,
 import { useAuth } from '../../context/AuthContext';
 import NancyNavbar from '../../components/NancyNavbar';
 
+import { useNancyTheme } from '../../context/NancyThemeContext';
+
 const Map = () => {
     const { user } = useAuth();
+    const { currentBg } = useNancyTheme();
     const [locations, setLocations] = useState([]);
     const [isAdding, setIsAdding] = useState(false);
     const [newLoc, setNewLoc] = useState({ city: '', country: '', date: '', notes: '' });
@@ -51,7 +54,7 @@ const Map = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5',
+            background: currentBg,
             padding: '4rem 1rem',
             display: 'flex',
             flexDirection: 'column',

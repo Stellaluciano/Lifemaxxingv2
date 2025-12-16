@@ -4,8 +4,11 @@ import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serve
 import { useAuth } from '../../context/AuthContext';
 import NancyNavbar from '../../components/NancyNavbar';
 
+import { useNancyTheme } from '../../context/NancyThemeContext';
+
 const BucketList = () => {
     const { user } = useAuth();
+    const { currentBg } = useNancyTheme();
     const [items, setItems] = useState([]);
     const [newItem, setNewItem] = useState('');
     const [editingId, setEditingId] = useState(null);
@@ -93,7 +96,7 @@ const BucketList = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5', // Pink tint background
+            background: currentBg, // Dynamic tint
             padding: '4rem 1rem',
             display: 'flex',
             flexDirection: 'column',

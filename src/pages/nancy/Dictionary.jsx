@@ -4,10 +4,12 @@ import { db } from '../../firebase';
 import { collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { pinyin } from 'pinyin-pro';
+import { useNancyTheme } from '../../context/NancyThemeContext';
 
 const NancyDictionary = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { currentBg } = useNancyTheme();
     const [entries, setEntries] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -237,7 +239,7 @@ const NancyDictionary = () => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#fff0f5', // Pink tint
+            background: currentBg,
             padding: '2rem 1rem',
             display: 'flex',
             flexDirection: 'column',
@@ -252,19 +254,18 @@ const NancyDictionary = () => {
                     position: 'absolute',
                     top: '2rem',
                     left: '2rem',
-                    background: 'white',
+                    background: 'transparent',
                     border: 'none',
-                    borderRadius: '50%',
-                    width: '50px',
-                    height: '50px',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                    fontSize: '2rem',
                     cursor: 'pointer',
-                    fontSize: '1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    color: '#be185d',
+                    transition: 'transform 0.2s',
+                    padding: '0.5rem',
+                    lineHeight: 1,
                     zIndex: 20
                 }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 title="Back to Home"
             >
                 ←
