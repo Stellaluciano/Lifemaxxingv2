@@ -17,6 +17,7 @@ import Timeline from './pages/nancy/Timeline';
 import Photos from './pages/nancy/Photos';
 import Map from './pages/nancy/Map';
 import BucketList from './pages/nancy/BucketList';
+import CreativeMoments from './pages/nancy/CreativeMoments';
 import './App.css';
 import './firebase';
 import {
@@ -88,6 +89,7 @@ function App() {
         <Route path="/nancy/photos" element={<Photos />} />
         <Route path="/nancy/map" element={<Map />} />
         <Route path="/nancy/bucket-list" element={<BucketList />} />
+        <Route path="/nancy/creative" element={<CreativeMoments />} />
       </Routes>
     </BrowserRouter>
   );
