@@ -77,7 +77,7 @@ const Timeline = () => {
         }}>
             <NancyNavbar />
 
-            <h1 style={{ color: '#be185d', fontSize: '3rem', marginTop: '4rem', marginBottom: '2rem', textShadow: '0 2px 5px rgba(190, 24, 93, 0.1)' }}>Our Story ⏳</h1>
+            <h1 style={{ color: '#be185d', fontSize: '3rem', marginTop: '4rem', marginBottom: '2rem', textShadow: '0 2px 5px rgba(190, 24, 93, 0.1)' }}>Our Timeline</h1>
 
             {/* Add Button */}
             <button

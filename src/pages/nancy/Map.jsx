@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, query, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { collection, query, onSnapshot, addDoc, deleteDoc, doc, updateDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import NancyNavbar from '../../components/NancyNavbar';
 import { useNancyTheme } from '../../context/NancyThemeContext';
@@ -9,6 +9,7 @@ import { useNancyTheme } from '../../context/NancyThemeContext';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import EmojiPicker from 'emoji-picker-react';
 
 // Fix for default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -18,36 +19,15 @@ L.Icon.Default.mergeOptions({
     shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-// Custom Icons
+// Custom Icons Generator
 const createEmojiIcon = (emoji) => {
     return new L.DivIcon({
         className: 'custom-emoji-icon',
-        html: `<div style="font-size: 2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.2);">${emoji}</div>`,
+        html: `<div style="font-size: 2rem; text-shadow: 0 2px 5px rgba(0,0,0,0.2); text-align: center; line-height: 1;">${emoji}</div>`,
         iconSize: [30, 30],
         iconAnchor: [15, 30], // Bottom center-ish
         popupAnchor: [0, -30]
     });
-};
-
-const ICONS = {
-    default: createEmojiIcon('📍'),
-    love: createEmojiIcon('❤️'),
-    home: createEmojiIcon('🏠'),
-    travel: createEmojiIcon('✈️'),
-    food: createEmojiIcon('🍽️'),
-    star: createEmojiIcon('⭐')
-};
-
-// Component to handle map clicks
-const LocationMarker = ({ isAdding, onMapClick }) => {
-    useMapEvents({
-        click(e) {
-            if (isAdding) {
-                onMapClick(e.latlng);
-            }
-        },
-    });
-    return null;
 };
 
 const Map = () => {
@@ -55,8 +35,11 @@ const Map = () => {
     const { currentBg } = useNancyTheme();
     const [locations, setLocations] = useState([]);
     const [isAddingMode, setIsAddingMode] = useState(false);
-    const [tempCoords, setTempCoords] = useState(null); // Coords for new pin
-    const [formData, setFormData] = useState({ city: '', country: '', date: '', notes: '', type: 'default' });
+    const [tempCoords, setTempCoords] = useState(null); // Coords for new pin or editing pin
+    const [formData, setFormData] = useState({ city: '', country: '', date: '', notes: '', customEmoji: '' });
+    const [editingId, setEditingId] = useState(null); // ID of location being edited
+    const [deleteId, setDeleteId] = useState(null); // ID of location to confirm delete
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false); // Toggle for emoji picker
 
     // Fetch Locations
     useEffect(() => {
@@ -73,7 +56,22 @@ const Map = () => {
 
     const handleMapClick = (latlng) => {
         setTempCoords(latlng);
-        setIsAddingMode(false); // Stop listening for clicks, show form
+        setEditingId(null);
+        setFormData({ city: '', country: '', date: '', notes: '', customEmoji: '📍' });
+        setIsAddingMode(false);
+        setShowEmojiPicker(false);
+    };
+
+    const handleEdit = (loc) => {
+        setEditingId(loc.id);
+        setFormData({
+            city: loc.city || '',
+            country: loc.country || '',
+            date: loc.date || '',
+            notes: loc.notes || '',
+            customEmoji: loc.customEmoji || '📍' // Default to pin if no emoji
+        });
+        setTempCoords({ lat: loc.lat, lng: loc.lng });
     };
 
     const handleSave = async (e) => {
@@ -81,25 +79,43 @@ const Map = () => {
         if (!user || !tempCoords) return;
 
         try {
-            await addDoc(collection(db, 'users', user.uid, 'nancy_locations'), {
+            const dataToSave = {
                 ...formData,
                 lat: tempCoords.lat,
                 lng: tempCoords.lng,
-                createdAt: serverTimestamp()
-            });
+                // If user cleared the emoji box, default back to pin
+                customEmoji: formData.customEmoji.trim() || '📍'
+            };
+
+            if (editingId) {
+                // Update existing
+                await updateDoc(doc(db, 'users', user.uid, 'nancy_locations', editingId), {
+                    ...dataToSave,
+                    updatedAt: serverTimestamp()
+                });
+            } else {
+                // Create new
+                await addDoc(collection(db, 'users', user.uid, 'nancy_locations'), {
+                    ...dataToSave,
+                    createdAt: serverTimestamp()
+                });
+            }
             // Reset
-            setFormData({ city: '', country: '', date: '', notes: '', type: 'default' });
+            setFormData({ city: '', country: '', date: '', notes: '', customEmoji: '' });
             setTempCoords(null);
+            setEditingId(null);
+            setShowEmojiPicker(false);
         } catch (error) {
             console.error("Error saving location:", error);
             alert("Failed to save location.");
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!user || !window.confirm("Remove this memory?")) return;
+    const confirmDelete = async () => {
+        if (!user || !deleteId) return;
         try {
-            await deleteDoc(doc(db, 'users', user.uid, 'nancy_locations', id));
+            await deleteDoc(doc(db, 'users', user.uid, 'nancy_locations', deleteId));
+            setDeleteId(null);
         } catch (error) {
             console.error(error);
         }
@@ -137,20 +153,30 @@ const Map = () => {
                     <Marker
                         key={loc.id}
                         position={[loc.lat, loc.lng]}
-                        icon={ICONS[loc.type] || ICONS.default}
+                        icon={createEmojiIcon(loc.customEmoji || '📍')}
                     >
                         <Popup>
                             <div style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '0.2rem' }}>
+                                    {loc.customEmoji || '📍'}
+                                </div>
                                 <h3 style={{ margin: '0 0 5px 0', color: '#be185d' }}>{loc.city}</h3>
-                                {loc.country && <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#666' }}>{loc.country}</div>}
                                 {loc.date && <div style={{ fontSize: '0.8rem', color: '#999', margin: '5px 0' }}>{new Date(loc.date).toLocaleDateString()}</div>}
                                 {loc.notes && <p style={{ margin: '5px 0', fontStyle: 'italic' }}>"{loc.notes}"</p>}
-                                <button
-                                    onClick={() => handleDelete(loc.id)}
-                                    style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 8px', marginTop: '5px', cursor: 'pointer', fontSize: '0.7rem' }}
-                                >
-                                    Remove
-                                </button>
+                                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center', marginTop: '8px' }}>
+                                    <button
+                                        onClick={() => handleEdit(loc)}
+                                        style={{ background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '0.7rem' }}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => setDeleteId(loc.id)}
+                                        style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontSize: '0.7rem' }}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
                         </Popup>
                     </Marker>
@@ -172,7 +198,7 @@ const Map = () => {
                     textShadow: '2px 2px 0px white, -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white',
                     pointerEvents: 'auto'
                 }}>
-                    Map of Us 🗺️
+                    Map of Us🌏
                 </h1>
             </div>
 
@@ -191,7 +217,7 @@ const Map = () => {
                     pointerEvents: 'none', // Allow clicking through
                     textAlign: 'center'
                 }}>
-                    <h2 style={{ margin: 0, color: '#be185d' }}>👇 Tap anywhere on the map!</h2>
+                    <h2 style={{ margin: 0, color: '#be185d' }}>↓Tap anywhere on the map!</h2>
                     <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>(Zoom in for better precision)</p>
                 </div>
             )}
@@ -225,11 +251,11 @@ const Map = () => {
                     onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
-                    {isAddingMode ? 'Cancel' : '📍 Add Memory'}
+                    {isAddingMode ? 'Cancel' : '📍 Add Location'}
                 </button>
             )}
 
-            {/* Modal Form for New Pin */}
+            {/* Modal Form for New/Edit Pin */}
             {tempCoords && (
                 <div style={{
                     position: 'absolute',
@@ -244,51 +270,97 @@ const Map = () => {
                     width: '90%',
                     maxWidth: '400px'
                 }}>
-                    <h3 style={{ marginTop: 0, color: '#be185d' }}>Add New Memory</h3>
+                    <h3 style={{ marginTop: 0, color: '#be185d' }}>{editingId ? 'Edit Location' : 'Add New Location'}</h3>
                     <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <select
-                            value={formData.type}
-                            onChange={e => setFormData({ ...formData, type: e.target.value })}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        >
-                            <option value="default">📍 General Place</option>
-                            <option value="love">❤️ Romantic Date</option>
-                            <option value="home">🏠 Our Home</option>
-                            <option value="travel">✈️ Trip / Vacation</option>
-                            <option value="food">🍽️ Restaurant / Food</option>
-                            <option value="star">⭐ Special Event</option>
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Place Name (e.g. Navy Pier)"
-                            required
-                            value={formData.city}
-                            onChange={e => setFormData({ ...formData, city: e.target.value })}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                        <input
-                            type="text"
-                            placeholder="Country / State"
-                            value={formData.country}
-                            onChange={e => setFormData({ ...formData, country: e.target.value })}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                        <input
-                            type="date"
-                            value={formData.date}
-                            onChange={e => setFormData({ ...formData, date: e.target.value })}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
-                        />
-                        <textarea
-                            placeholder="What happened here?"
-                            value={formData.notes}
-                            onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                            style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', minHeight: '80px' }}
-                        />
+
+                        {/* Custom Emoji Input */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', marginLeft: '0.2rem' }}>
+                                Pin Icon
+                            </label>
+                            <div style={{ position: 'relative' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                    style={{
+                                        background: 'white',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '12px',
+                                        padding: '0.5rem 1rem',
+                                        fontSize: '1.5rem',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    {formData.customEmoji || '📍'}
+                                    <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: 'normal' }}>
+                                        {showEmojiPicker ? 'Close Picker' : 'Change Icon'}
+                                    </span>
+                                </button>
+
+                                {showEmojiPicker && (
+                                    <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 50, marginTop: '0.5rem' }}>
+                                        <EmojiPicker
+                                            onEmojiClick={(emojiData) => {
+                                                setFormData({ ...formData, customEmoji: emojiData.emoji });
+                                                setShowEmojiPicker(false);
+                                            }}
+                                            width={300}
+                                            height={400}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', marginLeft: '0.2rem' }}>
+                                Where is the place?
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Place Name (e.g. Navy Pier)"
+                                required
+                                value={formData.city}
+                                onChange={e => setFormData({ ...formData, city: e.target.value })}
+                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', marginLeft: '0.2rem' }}>
+                                Date <span style={{ fontWeight: 'normal', color: '#999' }}>(Optional - leave blank for permanent spots)</span>
+                            </label>
+                            <input
+                                type="date"
+                                value={formData.date}
+                                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666', marginLeft: '0.2rem' }}>
+                                What happened here?
+                            </label>
+                            <textarea
+                                placeholder="Tell the story..."
+                                value={formData.notes}
+                                onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                                style={{ padding: '0.8rem', borderRadius: '8px', border: '1px solid #ddd', minHeight: '80px' }}
+                            />
+                        </div>
+
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             <button
                                 type="button"
-                                onClick={() => setTempCoords(null)}
+                                onClick={() => {
+                                    setTempCoords(null);
+                                    setEditingId(null);
+                                }}
                                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: 'none', background: '#ddd', cursor: 'pointer' }}
                             >
                                 Cancel
@@ -297,10 +369,55 @@ const Map = () => {
                                 type="submit"
                                 style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: 'none', background: '#be185d', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
                             >
-                                Save Pin
+                                {editingId ? 'Update' : 'Save Pin'}
                             </button>
                         </div>
                     </form>
+                </div>
+            )}
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteId && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 3000
+                }} onClick={() => setDeleteId(null)}>
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            padding: '2rem',
+                            borderRadius: '20px',
+                            textAlign: 'center',
+                            maxWidth: '300px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        <h3 style={{ margin: '0 0 1rem 0', color: '#be185d' }}>Delete this memory?</h3>
+                        <p style={{ color: '#666', marginBottom: '1.5rem' }}>This cannot be undone.</p>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button
+                                onClick={() => setDeleteId(null)}
+                                style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: 'none', background: '#e5e7eb', cursor: 'pointer', fontWeight: 'bold' }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                style={{ padding: '0.8rem 1.5rem', borderRadius: '12px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -324,7 +441,7 @@ const Map = () => {
                             <li key={l.id}>
                                 {l.city}
                                 <button
-                                    onClick={() => handleDelete(l.id)}
+                                    onClick={() => setDeleteId(l.id)}
                                     style={{ marginLeft: '5px', border: 'none', background: 'none', cursor: 'pointer', color: 'red' }}>
                                     (x)
                                 </button>
@@ -336,8 +453,21 @@ const Map = () => {
                     </div>
                 </div>
             )}
+
         </div>
     );
+};
+
+// Component to handle map clicks needs to be defined outside or inside but we need to make sure we use it
+const LocationMarker = ({ isAdding, onMapClick }) => {
+    useMapEvents({
+        click(e) {
+            if (isAdding) {
+                onMapClick(e.latlng);
+            }
+        },
+    });
+    return null;
 };
 
 export default Map;
