@@ -323,6 +323,24 @@ const PrivatePage = () => {
                 <span>我们在一起 {totalDays}天啦～</span>
             </div>
 
+            {/* Dictionary Link */}
+            <div
+                onClick={() => navigate('/nancy/dictionary')}
+                style={{
+                    position: 'absolute',
+                    bottom: '2rem',
+                    left: '2rem',
+                    fontSize: '2.5rem',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s'
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                title="Our Dictionary"
+            >
+                📖
+            </div>
+
             <div style={{ textAlign: 'center', marginBottom: '3rem', width: '100%' }}>
                 <h1 style={{ color: '#db2777', fontSize: '3.5rem', marginBottom: '0.5rem', textShadow: '0 2px 10px rgba(219, 39, 119, 0.1)' }}>♡nancy&doug♡</h1>
                 <p style={{ color: '#db2777', fontSize: '1.25rem', opacity: 0.9, fontWeight: '500' }}>🐱My dearest girlfriend. My best friend. My love.🐶</p>

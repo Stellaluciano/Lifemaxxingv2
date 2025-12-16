@@ -18,6 +18,7 @@ import Photos from './pages/nancy/Photos';
 import Map from './pages/nancy/Map';
 import BucketList from './pages/nancy/BucketList';
 import CreativeMoments from './pages/nancy/CreativeMoments';
+import NancyDictionary from './pages/nancy/Dictionary';
 import './App.css';
 import './firebase';
 import {
@@ -90,6 +91,7 @@ function App() {
         <Route path="/nancy/map" element={<Map />} />
         <Route path="/nancy/bucket-list" element={<BucketList />} />
         <Route path="/nancy/creative" element={<CreativeMoments />} />
+        <Route path="/nancy/dictionary" element={<NancyDictionary />} />
       </Routes>
     </BrowserRouter>
   );
