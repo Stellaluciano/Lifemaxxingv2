@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -55,6 +55,7 @@ const createId = () =>
 
 const Wishlist = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [directions, setDirections] = useState([]);
   const [newDirection, setNewDirection] = useState('');
   const [addingDirection, setAddingDirection] = useState(false);
@@ -396,9 +397,39 @@ const Wishlist = () => {
   return (
     <div className="wishlist-page">
       <section className="wishlist-section wishlist-section--directions">
-        <header>
+        <header style={{ position: 'relative', width: '100%', marginBottom: '1.5rem', textAlign: 'center' }}>
           <h1>Life Direction Keywords</h1>
-          <p>Capture the phrases that keep you grounded. They become part of your history.</p>
+          <p style={{ margin: '0.5rem auto 0' }}>Capture the phrases that keep you grounded. They become part of your history.</p>
+          <button
+            onClick={() => navigate('/life-advice')}
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              background: 'transparent',
+              border: '1px solid #e5e7eb',
+              padding: '0.4rem 0.8rem',
+              borderRadius: '999px',
+              color: '#6b7280',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#1f2333';
+              e.currentTarget.style.color = '#1f2333';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#e5e7eb';
+              e.currentTarget.style.color = '#6b7280';
+            }}
+          >
+            <span>📜</span> Elder's Wisdom
+          </button>
         </header>
         <form className="wishlist-direction-form" onSubmit={handleAddDirection}>
           <input
@@ -451,6 +482,8 @@ const Wishlist = () => {
             ))
           )}
         </div>
+
+
       </section>
 
       <section className="wishlist-section wishlist-section--tasks">

@@ -11,6 +11,7 @@ import Login from './pages/Login.jsx';
 import Profile from './pages/Profile.jsx';
 import FocusRecord from './pages/FocusRecord.jsx';
 import Wishlist from './pages/Wishlist.jsx';
+import LifeAdvice from './pages/LifeAdvice.jsx';
 import MyTemple from './pages/MyTemple.jsx';
 import PrivatePage from './pages/PrivatePage.jsx';
 import Timeline from './pages/nancy/Timeline';
@@ -45,6 +46,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/life-advice" element={<LifeAdvice />} />
           <Route path="/my-temple" element={<MyTemple />} />
           <Route path="/focus-record" element={<FocusRecord />} />
 
