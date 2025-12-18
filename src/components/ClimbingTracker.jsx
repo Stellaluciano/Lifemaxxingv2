@@ -50,6 +50,7 @@ const ClimbingTracker = () => {
     const [climbType, setClimbType] = useState('boulder'); // 'boulder', 'top_rope', 'lead'
     const [showLogModal, setShowLogModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showInfo, setShowInfo] = useState(false); // Info tooltip state
 
     // Form State
     const [selectedGrade, setSelectedGrade] = useState('V3');
@@ -187,7 +188,57 @@ const ClimbingTracker = () => {
             <div className="top-bar">
                 <div className="title-group">
                     <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#1f2333' }}>Climbing Tracker</h2>
-                    <span className="climb-subtitle">The only way is up.</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className="climb-subtitle">The only way is up.</span>
+                        <div
+                            style={{ position: 'relative', display: 'flex', alignItems: 'center', cursor: 'help', color: '#9ca3af' }}
+                            onMouseEnter={() => setShowInfo(true)}
+                            onMouseLeave={() => setShowInfo(false)}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                            {showInfo && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    marginTop: '8px',
+                                    background: '#1f2937',
+                                    color: 'white',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    fontSize: '0.85rem',
+                                    width: '260px',
+                                    zIndex: 50,
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                                    lineHeight: '1.4',
+                                    textAlign: 'left',
+                                    fontWeight: 'normal'
+                                }}>
+                                    <div style={{ marginBottom: '8px' }}>
+                                        <strong>V Scale (Hueco):</strong> For bouldering. Ranges from VB (Basic) to V17.
+                                    </div>
+                                    <div>
+                                        <strong>YDS (Yosemite):</strong> For roped climbing (Top Rope, Lead). Ranges from 5.0 to 5.15d.
+                                    </div>
+                                    {/* Small arrow */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '-4px',
+                                        left: '50%',
+                                        transform: 'translateX(-50%) rotate(45deg)',
+                                        width: '8px',
+                                        height: '8px',
+                                        background: '#1f2937'
+                                    }} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
