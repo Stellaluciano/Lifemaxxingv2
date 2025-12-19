@@ -200,42 +200,71 @@ const ClimbingTracker = () => {
                                 <line x1="12" y1="16" x2="12" y2="12"></line>
                                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
                             </svg>
-                            {showInfo && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '100%',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    marginTop: '8px',
-                                    background: '#1f2937',
-                                    color: 'white',
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    fontSize: '0.85rem',
-                                    width: '260px',
-                                    zIndex: 50,
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                                    lineHeight: '1.4',
-                                    textAlign: 'left',
-                                    fontWeight: 'normal'
-                                }}>
-                                    <div style={{ marginBottom: '8px' }}>
-                                        <strong>V Scale (Hueco):</strong> For bouldering. Ranges from VB (Basic) to V17.
-                                    </div>
-                                    <div>
-                                        <strong>YDS (Yosemite):</strong> For roped climbing (Top Rope, Lead). Ranges from 5.0 to 5.15d.
-                                    </div>
-                                    {/* Small arrow */}
+                            {showInfo && createPortal(
+                                <div
+                                    style={{
+                                        position: 'fixed',
+                                        top: 0,
+                                        left: 0,
+                                        width: '100vw',
+                                        height: '100vh',
+                                        pointerEvents: 'none',
+                                        zIndex: 9999
+                                    }}
+                                >
                                     <div style={{
-                                        position: 'absolute',
-                                        top: '-4px',
+                                        position: 'fixed',
+                                        top: '50%',
                                         left: '50%',
-                                        transform: 'translateX(-50%) rotate(45deg)',
-                                        width: '8px',
-                                        height: '8px',
-                                        background: '#1f2937'
-                                    }} />
-                                </div>
+                                        transform: 'translate(-50%, -50%)',
+                                        background: 'white',
+                                        color: '#4b5563',
+                                        padding: '32px',
+                                        borderRadius: '16px',
+                                        border: '1px solid #f3f4f6',
+                                        fontSize: '0.9rem',
+                                        width: '650px',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+                                        lineHeight: '1.6',
+                                        textAlign: 'left',
+                                        fontWeight: 'normal',
+                                        pointerEvents: 'auto'
+                                    }}>
+                                        {climbType === 'boulder' ? (
+                                            <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <strong style={{ color: '#1f2333', fontSize: '1.1rem', display: 'block', marginBottom: '8px' }}>V Scale</strong>
+                                                    <p style={{ margin: 0, opacity: 0.9 }}>
+                                                        The <strong>V</strong> scale, also known as the <strong>Hueco</strong> scale, originated in the late 1980s and early 1990s at <strong>Hueco</strong> Tanks, Texas, where American climbing pioneer John Sherman, nicknamed “<strong>the Verm</strong>,” introduced a bouldering-specific grading system at a time when climbing difficulty was largely defined by roped climbing grades, and bouldering was often treated primarily as training for harder roped routes.
+                                                    </p>
+                                                </div>
+                                                <div style={{ width: '280px', flexShrink: 0 }}>
+                                                    <div style={{
+                                                        height: '240px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        position: 'relative'
+                                                    }}>
+                                                        <img
+                                                            src={require('../assets/Blank_US_Map_(states_only).svg').default}
+                                                            alt="Map showing Hueco Tanks with Texas highlighted"
+                                                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <strong style={{ color: '#1f2333', fontSize: '1.1rem' }}>YDS (Yosemite)</strong>
+                                                <p style={{ marginTop: '8px' }}>
+                                                    For roped climbing (Top Rope, Lead). Ranges from 5.0 to 5.15d.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>,
+                                document.body
                             )}
                         </div>
                     </div>
@@ -314,88 +343,92 @@ const ClimbingTracker = () => {
             </div>
 
             {/* LOG MODAL */}
-            {showLogModal && createPortal(
-                <div className="climb-modal-overlay" onClick={() => setShowLogModal(false)}>
-                    <div className="climb-modal" onClick={e => e.stopPropagation()}>
-                        <h3>Log Sent Climb</h3>
+            {
+                showLogModal && createPortal(
+                    <div className="climb-modal-overlay" onClick={() => setShowLogModal(false)}>
+                        <div className="climb-modal" onClick={e => e.stopPropagation()}>
+                            <h3>Log Sent Climb</h3>
 
-                        <div className="form-group">
-                            <label>Grade</label>
-                            <div className="grade-grid">
-                                {(climbType === 'boulder' ? V_GRADES : YDS_GRADES).map(g => (
-                                    <button
-                                        key={g}
-                                        className={`grade-select-btn ${selectedGrade === g ? 'selected' : ''}`}
-                                        onClick={() => setSelectedGrade(g)}
-                                        style={{
-                                            borderColor: selectedGrade === g ? getBarColor(g) : 'transparent',
-                                            backgroundColor: selectedGrade === g ? `${getBarColor(g)}20` : '#f5f5f5',
-                                            color: selectedGrade === g ? getBarColor(g) : '#333'
-                                        }}
-                                    >
-                                        {g}
-                                    </button>
-                                ))}
+                            <div className="form-group">
+                                <label>Grade</label>
+                                <div className="grade-grid">
+                                    {(climbType === 'boulder' ? V_GRADES : YDS_GRADES).map(g => (
+                                        <button
+                                            key={g}
+                                            className={`grade-select-btn ${selectedGrade === g ? 'selected' : ''}`}
+                                            onClick={() => setSelectedGrade(g)}
+                                            style={{
+                                                borderColor: selectedGrade === g ? getBarColor(g) : 'transparent',
+                                                backgroundColor: selectedGrade === g ? `${getBarColor(g)}20` : '#f5f5f5',
+                                                color: selectedGrade === g ? getBarColor(g) : '#333'
+                                            }}
+                                        >
+                                            {g}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Date Sent</label>
+                                <input
+                                    type="date"
+                                    value={logDate}
+                                    onChange={(e) => setLogDate(e.target.value)}
+                                    className="climb-date-input"
+                                />
+                            </div>
+
+                            <div className="modal-actions">
+                                <button className="cancel-btn" onClick={() => setShowLogModal(false)}>Cancel</button>
+                                <button className="save-btn" onClick={handleLogClimb}>Log It!</button>
                             </div>
                         </div>
-
-                        <div className="form-group">
-                            <label>Date Sent</label>
-                            <input
-                                type="date"
-                                value={logDate}
-                                onChange={(e) => setLogDate(e.target.value)}
-                                className="climb-date-input"
-                            />
-                        </div>
-
-                        <div className="modal-actions">
-                            <button className="cancel-btn" onClick={() => setShowLogModal(false)}>Cancel</button>
-                            <button className="save-btn" onClick={handleLogClimb}>Log It!</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body
-            )}
+                    </div>,
+                    document.body
+                )
+            }
 
             {/* HISTORY MODAL */}
-            {showHistoryModal && createPortal(
-                <div className="climb-modal-overlay" onClick={() => setShowHistoryModal(false)}>
-                    <div className="climb-modal history-modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="history-header">
-                            <h3>Climb History</h3>
-                            <button className="close-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
-                        </div>
+            {
+                showHistoryModal && createPortal(
+                    <div className="climb-modal-overlay" onClick={() => setShowHistoryModal(false)}>
+                        <div className="climb-modal history-modal-content" onClick={e => e.stopPropagation()}>
+                            <div className="history-header">
+                                <h3>Climb History</h3>
+                                <button className="close-icon" onClick={() => setShowHistoryModal(false)}>✕</button>
+                            </div>
 
-                        <div className="history-list">
-                            {climbs.length === 0 ? (
-                                <p className="empty-message">No climbs logged yet. Go send some rocks!</p>
-                            ) : (
-                                climbs.filter(c => (c.type || 'boulder') === climbType).map(climb => (
-                                    <div key={climb.id} className="history-item">
-                                        <div className="history-info">
-                                            <span
-                                                className="history-grade"
-                                                style={{ backgroundColor: getBarColor(climb.grade) }}
-                                            >
-                                                {climb.grade}
-                                            </span>
-                                            <span className="history-date">
-                                                {new Date(climb.timestamp).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                                            </span>
+                            <div className="history-list">
+                                {climbs.length === 0 ? (
+                                    <p className="empty-message">No climbs logged yet. Go send some rocks!</p>
+                                ) : (
+                                    climbs.filter(c => (c.type || 'boulder') === climbType).map(climb => (
+                                        <div key={climb.id} className="history-item">
+                                            <div className="history-info">
+                                                <span
+                                                    className="history-grade"
+                                                    style={{ backgroundColor: getBarColor(climb.grade) }}
+                                                >
+                                                    {climb.grade}
+                                                </span>
+                                                <span className="history-date">
+                                                    {new Date(climb.timestamp).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <button className="delete-log-btn" onClick={() => handleDelete(climb.id)}>
+                                                Delete
+                                            </button>
                                         </div>
-                                        <button className="delete-log-btn" onClick={() => handleDelete(climb.id)}>
-                                            Delete
-                                        </button>
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
+                    </div>,
+                    document.body
+                )
+            }
+        </div >
     );
 };
 

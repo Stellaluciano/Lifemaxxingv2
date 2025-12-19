@@ -21,6 +21,7 @@ const LifeAdvice = () => {
     const [advices, setAdvices] = useState([]);
     const [quote, setQuote] = useState('');
     const [author, setAuthor] = useState('');
+    const [manualDate, setManualDate] = useState('');
     const [editId, setEditId] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -46,6 +47,7 @@ const LifeAdvice = () => {
                 await updateDoc(doc(db, 'users', user.uid, 'life_advice', editId), {
                     quote,
                     author,
+                    manualDate,
                     updatedAt: serverTimestamp()
                 });
                 setEditId(null);
@@ -53,11 +55,13 @@ const LifeAdvice = () => {
                 await addDoc(collection(db, 'users', user.uid, 'life_advice'), {
                     quote,
                     author,
+                    manualDate,
                     createdAt: serverTimestamp()
                 });
             }
             setQuote('');
             setAuthor('');
+            setManualDate('');
         } catch (error) {
             console.error("Error saving advice:", error);
         }
@@ -66,6 +70,7 @@ const LifeAdvice = () => {
     const handleEdit = (advice) => {
         setQuote(advice.quote);
         setAuthor(advice.author);
+        setManualDate(advice.manualDate || '');
         setEditId(advice.id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -113,13 +118,22 @@ const LifeAdvice = () => {
                         required
                     />
                 </div>
+                <div className="life-advice-input-group">
+                    <label>Date Received</label>
+                    <input
+                        type="date"
+                        className="life-advice-input"
+                        value={manualDate}
+                        onChange={(e) => setManualDate(e.target.value)}
+                    />
+                </div>
                 <button type="submit" className="life-advice-submit-btn">
                     {editId ? 'Update Wisdom' : 'Record Wisdom'}
                 </button>
                 {editId && (
                     <button
                         type="button"
-                        onClick={() => { setEditId(null); setQuote(''); setAuthor(''); }}
+                        onClick={() => { setEditId(null); setQuote(''); setAuthor(''); setManualDate(''); }}
                         style={{ background: 'transparent', color: '#666', marginTop: '-1rem', cursor: 'pointer', border: 'none' }}
                     >
                         Cancel Edit
@@ -136,6 +150,11 @@ const LifeAdvice = () => {
                         </div>
                         <div className="life-advice-quote">"{advice.quote}"</div>
                         <div className="life-advice-author">— {advice.author}</div>
+                        {advice.manualDate && (
+                            <div className="life-advice-date" style={{ marginTop: '0.5rem', textAlign: 'right', fontStyle: 'italic' }}>
+                                {new Date(advice.manualDate + 'T12:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
+                        )}
                     </div>
                 ))}
                 {!loading && advices.length === 0 && (
