@@ -18,7 +18,9 @@ import {
     YAxis,
     Tooltip,
     CartesianGrid,
-    Cell
+    Cell,
+    LineChart,
+    Line
 } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -55,10 +57,12 @@ const ClimbingTracker = () => {
     // Form State
     const [selectedGrade, setSelectedGrade] = useState('V3');
     const [logDate, setLogDate] = useState(getLocalToday());
+    const [logTime, setLogTime] = useState(''); // For Speed Climbing (seconds)
 
     // Reset grade when type changes
     useEffect(() => {
         if (climbType === 'boulder') setSelectedGrade('V3');
+        else if (climbType === 'speed') setSelectedGrade(''); // No grade for speed
         else setSelectedGrade('5.10a');
     }, [climbType]);
 
@@ -117,16 +121,30 @@ const ClimbingTracker = () => {
         if (timeRange === '1M') cutoff = now - 30 * 24 * 60 * 60 * 1000;
         if (timeRange === '1Y') cutoff = now - 365 * 24 * 60 * 60 * 1000;
 
-        const currentGrades = climbType === 'boulder' ? V_GRADES : YDS_GRADES;
-        // For YDS, only show 5.5+ on graph as requested (Now starts at 5.6 by default)
-        const displayGrades = climbType === 'boulder' ? V_GRADES : YDS_GRADES;
-
-        // Filter
+        // Filter by type and time range common logic
         const filtered = climbs.filter(c => {
-            // Backwards compatibility: if type is missing, it's boulder
             const cType = c.type || 'boulder';
             return cType === climbType && c.timestamp >= cutoff;
         });
+
+        if (climbType === 'speed') {
+            // Processing for Line Chart (Date vs Time)
+            // We want to show the best time (lowest) for each day if there are multiple?
+            // Or just show all? Strength tracker shows all or max.
+            // Let's sort by date ascending
+            const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp);
+
+            return sorted.map(c => ({
+                id: c.id,
+                timestamp: c.timestamp,
+                dateStr: new Date(c.timestamp).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }),
+                time: parseFloat(c.time || 0)
+            }));
+        }
+
+        const currentGrades = climbType === 'boulder' ? V_GRADES : YDS_GRADES;
+        // For YDS, only show 5.5+ on graph as requested (Now starts at 5.6 by default)
+        const displayGrades = climbType === 'boulder' ? V_GRADES : YDS_GRADES;
 
         // Aggregate
         const counts = {};
@@ -148,6 +166,7 @@ const ClimbingTracker = () => {
     const cycleClimbType = () => {
         if (climbType === 'boulder') setClimbType('top_rope');
         else if (climbType === 'top_rope') setClimbType('lead');
+        else if (climbType === 'lead') setClimbType('speed');
         else setClimbType('boulder');
     };
 
@@ -161,13 +180,15 @@ const ClimbingTracker = () => {
 
             await addDoc(collection(db, 'users', user.uid, 'climbing_history'), {
                 type: climbType,
-                grade: selectedGrade,
+                grade: climbType === 'speed' ? null : selectedGrade,
+                time: climbType === 'speed' ? parseFloat(logTime) : null,
                 date: dateObj,
                 createdAt: serverTimestamp()
             });
             setShowLogModal(false);
             // Reset to defaults
             setSelectedGrade('V3');
+            setLogTime('');
             setLogDate(getLocalToday());
         } catch (error) {
             console.error("Error logging climb:", error);
@@ -235,12 +256,12 @@ const ClimbingTracker = () => {
                                                 <div style={{ flex: 1 }}>
                                                     <strong style={{ color: '#1f2333', fontSize: '1.1rem', display: 'block', marginBottom: '8px' }}>V Scale</strong>
                                                     <p style={{ margin: 0, opacity: 0.9 }}>
-                                                        The <strong>V</strong> scale, also known as the <strong>Hueco</strong> scale, originated in the late 1980s and early 1990s at <strong>Hueco</strong> Tanks, Texas, where American climbing pioneer John Sherman, nicknamed “<strong>the Verm</strong>,” introduced a bouldering-specific grading system at a time when climbing difficulty was largely defined by roped climbing grades, and bouldering was often treated primarily as training for harder roped routes.
+                                                        The <strong>V</strong> scale, also known as the <strong>Hueco</strong> scale, originated in the late 1980s and early 1990s at <strong>Hueco Tanks</strong> State Park, Texas, where American climbing pioneer John Sherman, nicknamed “<strong>the Verm</strong>,” introduced a bouldering-specific grading system at a time when climbing difficulty was largely defined by roped climbing grades, and bouldering was often treated primarily as training for harder roped routes.
                                                     </p>
                                                 </div>
-                                                <div style={{ width: '280px', flexShrink: 0 }}>
+                                                <div style={{ width: '298px', flexShrink: 0 }}>
                                                     <div style={{
-                                                        height: '240px',
+                                                        height: '280px',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
@@ -254,9 +275,16 @@ const ClimbingTracker = () => {
                                                     </div>
                                                 </div>
                                             </div>
+                                        ) : climbType === 'speed' ? (
+                                            <div>
+                                                <strong style={{ color: '#1f2333', fontSize: '1.1rem' }}>Speed Climbing</strong>
+                                                <p style={{ marginTop: '8px' }}>
+                                                    A race against the clock on a standardized 15m wall. The world record is under 5 seconds! Track your time in seconds.
+                                                </p>
+                                            </div>
                                         ) : (
                                             <div>
-                                                <strong style={{ color: '#1f2333', fontSize: '1.1rem' }}>YDS (Yosemite)</strong>
+                                                <strong style={{ color: '#1f2333', fontSize: '1.1rem' }}>Yosemite Decimal System (YDS)</strong>
                                                 <p style={{ marginTop: '8px' }}>
                                                     For roped climbing (Top Rope, Lead). Ranges from 5.0 to 5.15d.
                                                 </p>
@@ -276,7 +304,7 @@ const ClimbingTracker = () => {
                         onClick={cycleClimbType}
                         title="Click to switch climbing discipline"
                     >
-                        {climbType === 'boulder' ? 'Bouldering' : climbType === 'top_rope' ? 'Top Rope' : 'Lead'}
+                        {climbType === 'boulder' ? 'Bouldering' : climbType === 'top_rope' ? 'Top Rope' : climbType === 'lead' ? 'Lead' : 'Speed'}
                     </button>
                     {/* Add small visual indicator arrows if desired, or keep simple */}
                 </div>
@@ -291,34 +319,71 @@ const ClimbingTracker = () => {
 
             <div className="chart-area">
                 <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
-                        <XAxis
-                            dataKey="grade"
-                            tickLine={false}
-                            axisLine={{ stroke: '#eee' }}
-                            tick={{ fontSize: 10, fill: '#666' }}
-                            interval={timeRange === 'ALL' ? 'preserveStartEnd' : 0}
-                            ticks={timeRange === 'ALL' ? (climbType === 'boulder'
-                                ? ['VB', 'V1', 'V3', 'V5', 'V7', 'V9', 'V11', 'V13', 'V15', 'V17']
-                                : ['5.6', '5.8', '5.10a', '5.11a', '5.12a', '5.13a', '5.14a', '5.15a', '5.15d']) : undefined}
-                        />
-                        <YAxis
-                            allowDecimals={false}
-                            tickLine={false}
-                            axisLine={false}
-                            tick={{ fontSize: 12, fill: '#aaa' }}
-                        />
-                        <Tooltip
-                            cursor={{ fill: '#f4f4f5' }}
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                        />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                            {chartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={getBarColor(entry.grade)} />
-                            ))}
-                        </Bar>
-                    </BarChart>
+                    {climbType === 'speed' ? (
+                        <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <XAxis
+                                dataKey="timestamp"
+                                type="number"
+                                domain={['dataMin', 'dataMax']}
+                                tickFormatter={(ts) => new Date(ts).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
+                                tick={{ fontSize: 10, fill: '#aaa' }}
+                                tickLine={false}
+                                axisLine={false}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                domain={['auto', 'auto']}
+                                tick={{ fontSize: 10, fill: '#aaa' }}
+                                tickLine={false}
+                                axisLine={false}
+                                width={40}
+                                tickFormatter={(val) => `${val}s`}
+                            />
+                            <Tooltip
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                labelFormatter={(ts) => new Date(ts).toLocaleDateString()}
+                                formatter={(val) => [`${val} s`, 'Time']}
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="time"
+                                stroke="#f59e0b" // Ambient/Warning color like Speed
+                                strokeWidth={3}
+                                dot={{ r: 4, fill: '#f59e0b', strokeWidth: 2, stroke: '#fff' }}
+                                activeDot={{ r: 6 }}
+                            />
+                        </LineChart>
+                    ) : (
+                        <BarChart data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                            <XAxis
+                                dataKey="grade"
+                                tickLine={false}
+                                axisLine={{ stroke: '#eee' }}
+                                tick={{ fontSize: 10, fill: '#666' }}
+                                interval={timeRange === 'ALL' ? 'preserveStartEnd' : 0}
+                                ticks={timeRange === 'ALL' ? (climbType === 'boulder'
+                                    ? ['VB', 'V1', 'V3', 'V5', 'V7', 'V9', 'V11', 'V13', 'V15', 'V17']
+                                    : ['5.6', '5.8', '5.10a', '5.11a', '5.12a', '5.13a', '5.14a', '5.15a', '5.15d']) : undefined}
+                            />
+                            <YAxis
+                                allowDecimals={false}
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 12, fill: '#aaa' }}
+                            />
+                            <Tooltip
+                                cursor={{ fill: '#f4f4f5' }}
+                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={getBarColor(entry.grade)} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    )}
                 </ResponsiveContainer>
             </div>
 
@@ -350,23 +415,35 @@ const ClimbingTracker = () => {
                             <h3>Log Sent Climb</h3>
 
                             <div className="form-group">
-                                <label>Grade</label>
-                                <div className="grade-grid">
-                                    {(climbType === 'boulder' ? V_GRADES : YDS_GRADES).map(g => (
-                                        <button
-                                            key={g}
-                                            className={`grade-select-btn ${selectedGrade === g ? 'selected' : ''}`}
-                                            onClick={() => setSelectedGrade(g)}
-                                            style={{
-                                                borderColor: selectedGrade === g ? getBarColor(g) : 'transparent',
-                                                backgroundColor: selectedGrade === g ? `${getBarColor(g)}20` : '#f5f5f5',
-                                                color: selectedGrade === g ? getBarColor(g) : '#333'
-                                            }}
-                                        >
-                                            {g}
-                                        </button>
-                                    ))}
-                                </div>
+                                <label>{climbType === 'speed' ? 'Time (seconds)' : 'Grade'}</label>
+                                {climbType === 'speed' ? (
+                                    <input
+                                        type="number"
+                                        placeholder="e.g. 15.4"
+                                        value={logTime}
+                                        onChange={(e) => setLogTime(e.target.value)}
+                                        className="climb-date-input" // Reuse style class for consistency
+                                        autoFocus
+                                        step="0.01"
+                                    />
+                                ) : (
+                                    <div className="grade-grid">
+                                        {(climbType === 'boulder' ? V_GRADES : YDS_GRADES).map(g => (
+                                            <button
+                                                key={g}
+                                                className={`grade-select-btn ${selectedGrade === g ? 'selected' : ''}`}
+                                                onClick={() => setSelectedGrade(g)}
+                                                style={{
+                                                    borderColor: selectedGrade === g ? getBarColor(g) : 'transparent',
+                                                    backgroundColor: selectedGrade === g ? `${getBarColor(g)}20` : '#f5f5f5',
+                                                    color: selectedGrade === g ? getBarColor(g) : '#333'
+                                                }}
+                                            >
+                                                {g}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="form-group">
@@ -408,9 +485,9 @@ const ClimbingTracker = () => {
                                             <div className="history-info">
                                                 <span
                                                     className="history-grade"
-                                                    style={{ backgroundColor: getBarColor(climb.grade) }}
+                                                    style={{ backgroundColor: climbType === 'speed' ? '#f59e0b' : getBarColor(climb.grade) }}
                                                 >
-                                                    {climb.grade}
+                                                    {climbType === 'speed' ? `${climb.time}s` : climb.grade}
                                                 </span>
                                                 <span className="history-date">
                                                     {new Date(climb.timestamp).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}

@@ -115,7 +115,7 @@ const BucketList = () => {
                     marginBottom: '2rem',
                     textShadow: '0 2px 5px rgba(190, 24, 93, 0.1)'
                 }}>
-                    Our Bucket List ✨
+                    Our Bucket List
                 </h1>
 
                 {/* Add New Item */}

@@ -288,8 +288,8 @@ Place this code in the empty space below. */
 <title>District of Columbia</title></circle>
 
 <path class="separator1" fill="none" d="m 215,493 v 55 l 36,45 m -251,-168 h 147 l 68,68 h 85 l 54,54 v 46" style="display: none;"/>
-<circle cx="284" cy="428" r="4" fill="#dc2626" stroke="white" stroke-width="1.5" />
-<text x="274" y="450" font-family="Arial, sans-serif" font-size="14" fill="#1f2937" text-anchor="end">Hueco Tanks</text>
-<path d="M 284 428 L 274 445" stroke="#1f2937" stroke-width="1" fill="none" />
+<circle cx="284" cy="428" r="15" fill="#dc2626" stroke="white" stroke-width="2" />
+<text x="260" y="465" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#1f2937" text-anchor="end">Hueco Tanks</text>
+<path d="M 284 428 L 255 455" stroke="#1f2937" stroke-width="2" fill="none" />
 
 </svg>
