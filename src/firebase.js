@@ -4,11 +4,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -19,9 +15,23 @@ const firebaseConfig = {
   measurementId: process.env.REACT_APP_MEASUREMENT_ID
 };
 
+
+console.log("FIREBASE projectId =", process.env.REACT_APP_PROJECT_ID);
+console.log("FIREBASE authDomain =", process.env.REACT_APP_AUTH_DOMAIN);
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Analytics（建议加保护，避免生产炸站）
+let analytics = null;
+try {
+  if (process.env.REACT_APP_MEASUREMENT_ID) {
+    analytics = getAnalytics(app);
+  }
+} catch (e) {
+  // ignore analytics errors
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
